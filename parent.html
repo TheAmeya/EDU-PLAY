@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parents Score Overview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white py-6 shadow-lg">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Parents Score Overview</h1>
+      <a href="index.html" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Home
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-12">
+    <!-- Section title -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Game Scores and Performance Graphs</h2>
+      <p class="text-gray-600">Below you will find the latest game scores along with a graph for each game. This information helps you keep track of your child's progress in each game.</p>
+    </section>
+
+    <!-- Game Score Overview -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <!-- Spelling Bee -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-spell-check text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Spelling Bee</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 85</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 95</p>
+        </div>
+        <div>
+          <canvas id="chartSpelling" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Grammar Quest -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-book-open text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Grammar Quest</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 78</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 88</p>
+        </div>
+        <div>
+          <canvas id="chartGrammar" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Vocabulary Builder -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-comment-dots text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Vocabulary Builder</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 92</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 99</p>
+        </div>
+        <div>
+          <canvas id="chartVocab" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Detective Game -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-user-secret text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Detective Game</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 88</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 93</p>
+        </div>
+        <div>
+          <canvas id="chartDetective" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Audio Challenge -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-volume-up text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Audio Challenge</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 80</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 90</p>
+        </div>
+        <div>
+          <canvas id="chartAudio" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Board Game -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-chess-board text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Board Game</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 75</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 85</p>
+        </div>
+        <div>
+          <canvas id="chartBoard" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Scrabble Showdown -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-font text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Scrabble Showdown</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 90</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 97</p>
+        </div>
+        <div>
+          <canvas id="chartScrabble" class="w-full h-48"></canvas>
+        </div>
+      </div>
+
+      <!-- Wordle Master -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+          <i class="fas fa-keyboard text-blue-600 text-3xl mr-4"></i>
+          <h3 class="text-xl font-semibold text-gray-800">Wordle Master</h3>
+        </div>
+        <div class="mb-4">
+          <p class="text-gray-700"><strong>Latest Score:</strong> 82</p>
+          <p class="text-gray-700"><strong>High Score:</strong> 92</p>
+        </div>
+        <div>
+          <canvas id="chartWordle" class="w-full h-48"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p>&copy; 2023 Educational Games Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Chart.js Script for Sample Graphs -->
+  <script>
+    // A helper function to create a line chart
+    function createChart(canvasId, label, dataPoints) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: label,
+            data: dataPoints,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              suggestedMax: 100
+            }
+          }
+        }
+      });
+    }
+
+    // Sample data for each game (replace these with real data as needed)
+    createChart('chartSpelling', 'Spelling Bee Scores', [70, 85, 80, 90, 95, 85, 88]);
+    createChart('chartGrammar', 'Grammar Quest Scores', [65, 78, 75, 82, 88, 80, 84]);
+    createChart('chartVocab', 'Vocabulary Builder Scores', [80, 92, 85, 90, 99, 93, 95]);
+    createChart('chartDetective', 'Detective Game Scores', [75, 88, 80, 89, 93, 87, 90]);
+    createChart('chartAudio', 'Audio Challenge Scores', [68, 80, 76, 82, 90, 84, 86]);
+    createChart('chartBoard', 'Board Game Scores', [60, 75, 70, 78, 85, 80, 76]);
+    createChart('chartScrabble', 'Scrabble Showdown Scores', [82, 90, 88, 94, 97, 92, 95]);
+    createChart('chartWordle', 'Wordle Master Scores', [70, 82, 78, 85, 92, 88, 90]);
+  </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newton's Cradle Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+    }
+    canvas {
+      display: block;
+      background: white;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .slider-container, .button-container {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="controls">
+    <div class="slider-container">
+      <label for="numBalls">Number of Balls: <span id="numBallsValue">5</span></label>
+      <input type="range" id="numBalls" min="2" max="7" value="5" />
+    </div>
+    <div class="slider-container">
+      <label for="ballMass">Ball Mass (kg): <span id="ballMassValue">1.0</span></label>
+      <input type="range" id="ballMass" min="0.1" max="5" step="0.1" value="1.0" />
+    </div>
+    <div class="slider-container">
+      <label for="elasticity">Elasticity: <span id="elasticityValue">0.9</span></label>
+      <input type="range" id="elasticity" min="0.1" max="1.0" step="0.01" value="0.9" />
+    </div>
+    <div class="button-container">
+      <button onclick="startSimulation()">Start</button>
+      <button onclick="resetSimulation()">Reset</button>
+    </div>
+    <div><strong>Status:</strong> <span id="status">Ready</span></div>
+    <div><strong>Energy:</strong> <span id="energy">0.00 J</span></div>
+  </div>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    const G = 9.81;
+    let numBalls = 5;
+    let ballMass = 1.0;
+    let elasticity = 0.9;
+    let simulating = false;
+    let cradle;
+
+    document.getElementById("numBalls").addEventListener("input", e => {
+      numBalls = parseInt(e.target.value);
+      document.getElementById("numBallsValue").textContent = numBalls;
+    });
+    document.getElementById("ballMass").addEventListener("input", e => {
+      ballMass = parseFloat(e.target.value);
+      document.getElementById("ballMassValue").textContent = ballMass.toFixed(1);
+    });
+    document.getElementById("elasticity").addEventListener("input", e => {
+      elasticity = parseFloat(e.target.value);
+      document.getElementById("elasticityValue").textContent = elasticity.toFixed(2);
+    });
+
+    class Ball {
+      constructor(x, y, radius, mass, angle = 0, velocity = 0) {
+        this.originalX = x;
+        this.originalY = y;
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.mass = mass;
+        this.angle = angle;
+        this.velocity = velocity;
+        this.stringLength = 300;
+      }
+
+      update(dt) {
+        const angularAcceleration = -G / this.stringLength * Math.sin(this.angle);
+        this.velocity += angularAcceleration * dt;
+        this.angle += this.velocity * dt;
+        this.x = this.originalX + this.stringLength * Math.sin(this.angle);
+        this.y = this.originalY + this.stringLength * Math.cos(this.angle);
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.originalX, this.originalY);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "steelblue";
+        ctx.fill();
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+      }
+    }
+
+    class NewtonsCradle {
+      constructor(numBalls, ballMass, elasticity) {
+        this.numBalls = numBalls;
+        this.ballMass = ballMass;
+        this.elasticity = elasticity;
+        this.balls = [];
+        this.setupBalls();
+      }
+
+      setupBalls() {
+        const startX = width / 2 - (this.numBalls - 1) * 30;
+        for (let i = 0; i < this.numBalls; i++) {
+          const x = startX + i * 60;
+          const ball = new Ball(x, 150, 20, this.ballMass);
+          this.balls.push(ball);
+        }
+        this.balls[0].angle = -0.5;
+      }
+
+      update(dt) {
+        for (const ball of this.balls) {
+          ball.update(dt);
+        }
+
+        for (let i = 0; i < this.numBalls - 1; i++) {
+          const b1 = this.balls[i];
+          const b2 = this.balls[i + 1];
+          const dx = b1.x - b2.x;
+          const dy = b1.y - b2.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < b1.radius + b2.radius) {
+            const v1 = b1.velocity;
+            const v2 = b2.velocity;
+            b1.velocity = ((v1 * (b1.mass - b2.mass) + 2 * b2.mass * v2) / (b1.mass + b2.mass)) * this.elasticity;
+            b2.velocity = ((v2 * (b2.mass - b1.mass) + 2 * b1.mass * v1) / (b1.mass + b2.mass)) * this.elasticity;
+          }
+        }
+      }
+
+      draw() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(width / 2 - 200, 50, 400, 20);
+
+        let totalEnergy = 0;
+        for (const ball of this.balls) {
+          ball.draw();
+          const height = ball.stringLength * (1 - Math.cos(ball.angle));
+          const potential = ball.mass * G * height;
+          const kinetic = 0.5 * ball.mass * Math.pow(ball.velocity * ball.stringLength, 2);
+          totalEnergy += potential + kinetic;
+        }
+
+        document.getElementById("energy").textContent = totalEnergy.toFixed(2) + " J";
+      }
+    }
+
+    function startSimulation() {
+      simulating = true;
+      document.getElementById("status").textContent = "Simulation Running...";
+      cradle = new NewtonsCradle(numBalls, ballMass, elasticity);
+    }
+
+    function resetSimulation() {
+      simulating = false;
+      document.getElementById("status").textContent = "Ready";
+      cradle = new NewtonsCradle(numBalls, ballMass, elasticity);
+    }
+
+    function loop() {
+      if (simulating && cradle) {
+        cradle.update(1 / 60);
+        cradle.draw();
+      } else if (cradle) {
+        cradle.draw();
+      }
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener("resize", () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    });
+
+    cradle = new NewtonsCradle(numBalls, ballMass, elasticity);
+    loop();
+  </script>
+</body>
+</html>

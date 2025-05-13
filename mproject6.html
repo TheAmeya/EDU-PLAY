@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrix Master</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #27ae60;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .matrix-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 1rem 0;
+        }
+
+        .matrix-cell {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            color: var(--accent);
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        input {
+            padding: 15px;
+            font-size: 1.2rem;
+            width: 300px;
+            margin: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .feedback {
+            font-size: 1.2rem;
+            margin-top: 15px;
+            min-height: 25px;
+        }
+
+        .operation-title {
+            font-size: 1.3rem;
+            margin: 1rem 0;
+            color: var(--dark);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Matrix Master ⏳</h1>
+        <div class="score-board">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">❤❤❤</span></div>
+            <div class="timer">Time: <span id="timer">60</span>s</div>
+        </div>
+        
+        <div id="matrices-container"></div>
+        <div class="feedback" id="feedback"></div>
+        <div class="controls">
+            <input type="text" id="answer" placeholder="">
+            <button onclick="checkAnswer()">Check</button>
+        </div>
+    </div>
+
+    <script>
+        let currentProblem = null;
+        let score = 0;
+        let lives = 3;
+        let timeLeft = 60;
+        let timerId = null;
+        const operations = ['multiply', 'determinant', 'inverse'];
+        const problemTimes = {
+            'multiply': 60,
+            'determinant': 45,
+            'inverse': 50
+        };
+
+        function generateMatrix(rows, cols, min=-2, max=2) {
+            return Array.from({length: rows}, () => 
+                Array.from({length: cols}, () => Math.floor(Math.random() * (max - min + 1)) + min)
+            );
+        }
+
+        function matrixToString(matrix) {
+            return matrix.map(row => row.join(',')).join(';');
+        }
+
+        function calculateDeterminant(matrix) {
+            if(matrix.length === 2) {
+                return matrix[0][0]*matrix[1][1] - matrix[0][1]*matrix[1][0];
+            }
+            return matrix[0][0]*(matrix[1][1]*matrix[2][2] - matrix[1][2]*matrix[2][1]) -
+                   matrix[0][1]*(matrix[1][0]*matrix[2][2] - matrix[1][2]*matrix[2][0]) +
+                   matrix[0][2]*(matrix[1][0]*matrix[2][1] - matrix[1][1]*matrix[2][0]);
+        }
+
+        function matrixInverse(matrix) {
+            const det = calculateDeterminant(matrix);
+            if(det === 0) return null;
+            
+            if(matrix.length === 2) {
+                return [
+                    [matrix[1][1]/det, -matrix[0][1]/det],
+                    [-matrix[1][0]/det, matrix[0][0]/det]
+                ];
+            }
+            
+            const invDet = 1/det;
+            const adjugate = matrix.map((row, i) => 
+                row.map((_, j) => 
+                    calculateCofactor(matrix, i, j) * invDet
+                )
+            );
+            return adjugate;
+        }
+
+        function calculateCofactor(matrix, row, col) {
+            const minor = matrix.filter((_, i) => i !== row)
+                .map(r => r.filter((_, j) => j !== col));
+            const sign = Math.pow(-1, row + col);
+            return sign * calculateDeterminant(minor);
+        }
+
+        function generateProblem() {
+            clearInterval(timerId);
+            const operation = operations[Math.floor(Math.random() * operations.length)];
+            timeLeft = problemTimes[operation];
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('answer').placeholder = "Enter answer...";
+            
+            let problemData = {};
+
+            switch(operation) {
+                case 'multiply':
+                    const size = Math.random() < 0.5 ? 2 : 3;
+                    const mat1 = generateMatrix(size, size);
+                    let mat2;
+                    
+                    if(Math.random() < 0.5) {
+                        mat2 = generateMatrix(size, size);
+                    } else {
+                        mat2 = generateMatrix(size === 2 ? 3 : 2, size);
+                    }
+                    
+                    problemData = {
+                        type: 'multiply',
+                        matrices: [mat1, mat2],
+                        answer: multiplyMatrices(mat1, mat2)
+                    };
+                    break;
+
+                case 'determinant':
+                    const detSize = Math.random() < 0.5 ? 2 : 3;
+                    const detMat = generateMatrix(detSize, detSize);
+                    problemData = {
+                        type: 'determinant',
+                        matrices: [detMat],
+                        answer: calculateDeterminant(detMat)
+                    };
+                    break;
+
+                case 'inverse':
+                    let invMat;
+                    do {
+                        invMat = generateMatrix(2, 2);
+                    } while(calculateDeterminant(invMat) === 0);
+                    problemData = {
+                        type: 'inverse',
+                        matrices: [invMat],
+                        answer: matrixInverse(invMat)
+                    };
+                    break;
+            }
+
+            currentProblem = problemData;
+            displayProblem();
+            if(lives > 0) {
+                timerId = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function multiplyMatrices(a, b) {
+            if(a[0].length !== b.length) return 'null';
+            const result = [];
+            for(let i = 0; i < a.length; i++) {
+                result[i] = [];
+                for(let j = 0; j < b[0].length; j++) {
+                    result[i][j] = a[i].reduce((sum, elm, k) => sum + elm * b[k][j], 0);
+                }
+            }
+            return result;
+        }
+
+        function displayProblem() {
+            const container = document.getElementById('matrices-container');
+            container.innerHTML = '';
+            
+            const title = document.createElement('div');
+            title.className = 'operation-title';
+            
+            switch(currentProblem.type) {
+                case 'multiply':
+                    title.textContent = "Multiply if possible:";
+                    currentProblem.matrices.forEach((matrix, idx) => {
+                        const wrapper = document.createElement('div');
+                        matrix.forEach(row => {
+                            const rowDiv = document.createElement('div');
+                            rowDiv.className = 'matrix-row';
+                            row.forEach(cell => {
+                                const cellDiv = document.createElement('div');
+                                cellDiv.className = 'matrix-cell';
+                                cellDiv.textContent = cell;
+                                rowDiv.appendChild(cellDiv);
+                            });
+                            wrapper.appendChild(rowDiv);
+                        });
+                        container.appendChild(wrapper);
+                        if(idx === 0) {
+                            const multiplySign = document.createElement('div');
+                            multiplySign.textContent = '×';
+                            multiplySign.style.fontSize = '2rem';
+                            container.appendChild(multiplySign);
+                        }
+                    });
+                    break;
+
+                case 'determinant':
+                    title.textContent = "Find the determinant:";
+                    displaySingleMatrix(currentProblem.matrices[0], container);
+                    document.getElementById('answer').placeholder = "Enter determinant";
+                    break;
+
+                case 'inverse':
+                    title.textContent = "Find the inverse:";
+                    displaySingleMatrix(currentProblem.matrices[0], container);
+                    document.getElementById('answer').placeholder = "Enter matrix (e.g., 1/2,3;4,5)";
+                    break;
+            }
+
+            container.prepend(title);
+        }
+
+        function displaySingleMatrix(matrix, container) {
+            const wrapper = document.createElement('div');
+            matrix.forEach(row => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'matrix-row';
+                row.forEach(cell => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'matrix-cell';
+                    cellDiv.textContent = cell;
+                    rowDiv.appendChild(cellDiv);
+                });
+                wrapper.appendChild(rowDiv);
+            });
+            container.appendChild(wrapper);
+        }
+
+        function updateTimer() {
+            if(timeLeft > 0 && lives > 0) {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+            }
+            if(timeLeft <= 0) {
+                handleTimeout();
+            }
+        }
+
+        function handleTimeout() {
+            if(lives <= 0) return;
+            
+            lives--;
+            updateLives();
+            showFeedback("⏰ Time's up!", false);
+            
+            if(lives > 0) {
+                generateProblem();
+            } else {
+                clearInterval(timerId);
+                setTimeout(() => {
+                    alert(`Game Over! Final Score: ${score}`);
+                    resetGame();
+                }, 100);
+            }
+        }
+
+        function checkAnswer() {
+            clearInterval(timerId);
+            const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+            let isCorrect = false;
+
+            try {
+                switch(currentProblem.type) {
+                    case 'multiply':
+                        const correct = currentProblem.answer === 'null' ? 'null' : matrixToString(currentProblem.answer);
+                        isCorrect = userAnswer === (currentProblem.answer === 'null' ? 'null' : matrixToString(currentProblem.answer));
+                        break;
+
+                    case 'determinant':
+                        isCorrect = Math.abs(parseFloat(userAnswer) - currentProblem.answer) < 0.01;
+                        break;
+
+                    case 'inverse':
+                        const userMatrix = userAnswer.split(';').map(row => 
+                            row.split(',').map(cell => {
+                                if(cell.includes('/')) {
+                                    const [num, den] = cell.split('/');
+                                    return parseFloat(num)/parseFloat(den);
+                                }
+                                return parseFloat(cell);
+                            })
+                        );
+                        const product = multiplyMatrices(currentProblem.matrices[0], userMatrix);
+                        isCorrect = product.every((row, i) => 
+                            row.every((cell, j) => 
+                                Math.abs(cell - (i === j ? 1 : 0)) < 0.1
+                            )
+                        );
+                        break;
+                }
+            } catch {
+                isCorrect = false;
+            }
+
+            if(isCorrect) {
+                score += calculatePoints();
+                showFeedback("🎉 Correct!", true);
+            } else {
+                lives--;
+                showFeedback(`❌ Answer: ${formatCorrectAnswer()}`, false);
+            }
+
+            updateScore();
+            updateLives();
+            document.getElementById('answer').value = '';
+            
+            if(lives > 0) {
+                generateProblem();
+            } else {
+                clearInterval(timerId);
+                document.getElementById('timer').textContent = "0";
+                setTimeout(() => {
+                    alert(`Game Over! Final Score: ${score}`);
+                    resetGame();
+                }, 100);
+            }
+        }
+
+        function calculatePoints() {
+            switch(currentProblem.type) {
+                case 'determinant': return currentProblem.matrices[0].length === 2 ? 20 : 30;
+                case 'inverse': return 40;
+                case 'multiply': return currentProblem.answer === 'null' ? 15 : (currentProblem.answer[0].length === 2 ? 25 : 35);
+                default: return 15;
+            }
+        }
+
+        function formatCorrectAnswer() {
+            if(currentProblem.type === 'determinant') return currentProblem.answer;
+            if(currentProblem.type === 'inverse') return matrixToString(currentProblem.answer.map(row => 
+                row.map(cell => Number.isInteger(cell) ? cell : cell.toFixed(2).replace('.00',''))
+            ));
+            return currentProblem.answer === 'null' ? 'null' : matrixToString(currentProblem.answer);
+        }
+
+        function showFeedback(message, isSuccess) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.style.color = isSuccess ? 'var(--secondary)' : 'var(--accent)';
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function updateLives() {
+            document.getElementById('lives').textContent = '❤'.repeat(lives);
+        }
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            timeLeft = 60;
+            updateScore();
+            updateLives();
+            document.getElementById('timer').textContent = timeLeft;
+            generateProblem();
+        }
+
+        // Initialize game
+        generateProblem();
+    </script>
+</body>
+</html>

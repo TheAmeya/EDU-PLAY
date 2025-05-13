@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quadratic Equation Challenge</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Orbitron', sans-serif;
+            background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #0ff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px #0ff;
+        }
+
+        .problem-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        #problem-text {
+            font-size: 1.5em;
+            color: #0ff;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin: 20px 0;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .math-input {
+            padding: 12px;
+            background: #333;
+            border: 1px solid #0ff;
+            color: #0ff;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .math-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px #0ff;
+        }
+
+        #submit-btn {
+            padding: 15px 30px;
+            background: #0ff;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #submit-btn:hover {
+            background: #0dd;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            min-height: 30px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .correct {
+            color: #0f0;
+            animation: pulse 0.5s;
+        }
+
+        .incorrect {
+            color: #f00;
+            animation: shake 0.5s;
+        }
+
+        .complex-root {
+            color: #ff0;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .powerups {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .powerup {
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .time-boost {
+            background: #0ff;
+            color: #000;
+        }
+
+        .double-score {
+            background: #ff0;
+            color: #000;
+        }
+
+        .hint {
+            background: #0f0;
+            color: #000;
+        }
+
+        .graph-container {
+            background: rgba(255, 255, 255, 0.05);
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            position: relative;
+            height: 200px;
+        }
+
+        .graph-axis {
+            position: absolute;
+            background: #fff;
+        }
+
+        .x-axis {
+            width: 100%;
+            height: 2px;
+            bottom: 50%;
+            left: 0;
+        }
+
+        .y-axis {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+        }
+
+        .parabola-path {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            stroke: #0ff;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .high-scores {
+            margin-top: 30px;
+            border-top: 2px solid #0ff;
+            padding-top: 20px;
+        }
+
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div>Level: <span id="level">1</span></div>
+            <div>Score: <span id="score">0</span></div>
+            <div>Time: <span id="timer">90</span>s</div>
+        </div>
+        
+        <div class="powerups">
+            <div class="powerup time-boost" onclick="activatePowerup('time')">⏳ ×3</div>
+            <div class="powerup double-score" onclick="activatePowerup('score')">✨ ×3</div>
+            <div class="powerup hint" onclick="activatePowerup('hint')">💡 ×3</div>
+        </div>
+
+        <div class="problem-container">
+            <div class="problem-type" id="problem-type"></div>
+            <div id="problem-text"></div>
+            
+            <div class="graph-container">
+                <div class="graph-axis x-axis"></div>
+                <div class="graph-axis y-axis"></div>
+                <svg class="parabola-path" viewBox="0 0 100 100"></svg>
+            </div>
+
+            <div class="input-group">
+                <input type="text" class="math-input" id="root1" placeholder="Root 1 (e.g., 2.5 or 1+3i)">
+                <input type="text" class="math-input" id="root2" placeholder="Root 2 (e.g., -0.5 or 1-3i)">
+                <input type="text" class="math-input" id="vertex" placeholder="Vertex (e.g., 1.5,-3.75 or 2 3)">
+                <input type="text" class="math-input" id="discriminant" placeholder="Discriminant (e.g., 24.56)">
+            </div>
+            <button id="submit-btn">VERIFY SOLUTION</button>
+            <div id="feedback"></div>
+            <div id="complex-warning" class="complex-root"></div>
+        </div>
+
+        <div class="high-scores">
+            <h3>Leaderboard</h3>
+            <div id="score-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentLevel = 1;
+        let score = 0;
+        let timeLeft = 90;
+        let timerId = null;
+        let currentProblem = null;
+        let scoreMultiplier = 1;
+        let powerups = { time: 3, score: 3, hint: 3 };
+        let activePowerups = [];
+
+        const elements = {
+            problemText: document.getElementById('problem-text'),
+            root1: document.getElementById('root1'),
+            root2: document.getElementById('root2'),
+            vertex: document.getElementById('vertex'),
+            discriminant: document.getElementById('discriminant'),
+            feedback: document.getElementById('feedback'),
+            complexWarning: document.getElementById('complex-warning'),
+            level: document.getElementById('level'),
+            score: document.getElementById('score'),
+            timer: document.getElementById('timer'),
+            problemType: document.getElementById('problem-type'),
+            scoreList: document.getElementById('score-list')
+        };
+
+        function generateCoefficients(level) {
+            let a, b, c;
+            const complexity = Math.min(level, 10);
+            
+            do {
+                a = (Math.random() * complexity * 2 - complexity).toFixed(1);
+                b = (Math.random() * complexity * 4 - complexity * 2).toFixed(1);
+                c = (Math.random() * complexity * 4 - complexity * 2).toFixed(1);
+            } while (Math.abs(a) < 0.5);
+
+            return { 
+                a: parseFloat(a),
+                b: parseFloat(b),
+                c: parseFloat(c)
+            };
+        }
+
+        function solveQuadratic(a, b, c) {
+            const discriminant = b*b - 4*a*c;
+            let roots = [];
+            
+            if (discriminant >= 0) {
+                const root1 = (-b + Math.sqrt(discriminant)) / (2*a);
+                const root2 = (-b - Math.sqrt(discriminant)) / (2*a);
+                roots.push(
+                    parseFloat(root1.toFixed(2)),
+                    parseFloat(root2.toFixed(2))
+                );
+            } else {
+                const real = (-b/(2*a)).toFixed(2);
+                const imag = (Math.sqrt(-discriminant)/(2*a)).toFixed(2);
+                roots.push(
+                    `${real}+${imag}i`,
+                    `${real}-${imag}i`
+                );
+            }
+            return roots;
+        }
+
+        function generateProblem(level) {
+            const problemType = Math.random() > 0.7 && level > 3 ? 'vertex' : 'standard';
+            let problem;
+
+            if (problemType === 'vertex') {
+                const h = (Math.random() * level - level/2).toFixed(2);
+                const k = (Math.random() * level - level/2).toFixed(2);
+                const a = (Math.random() * (level/2) + 0.5).toFixed(2);
+                const b = -2 * parseFloat(a) * parseFloat(h);
+                const c = parseFloat(a) * parseFloat(h)**2 + parseFloat(k);
+                
+                problem = {
+                    equation: `y = ${a}(x - ${h})² + ${k}`,
+                    type: 'vertex',
+                    solution: {
+                        a: parseFloat(a),
+                        b: b,
+                        c: c,
+                        roots: solveQuadratic(a, b, c),
+                        vertexX: parseFloat(h),
+                        vertexY: parseFloat(k),
+                        discriminant: parseFloat((b*b - 4*a*c).toFixed(2))
+                    },
+                    hints: shuffleArray([
+                        `Discriminant: ${(b*b - 4*a*c).toFixed(2)}`,
+                        `Vertex: ${h}, ${k}`,
+                        `a-value: ${a}`
+                    ]),
+                    hintIndex: 0
+                };
+            } else {
+                const coeffs = generateCoefficients(level);
+                const vertX = -coeffs.b/(2*coeffs.a);
+                const vertY = coeffs.c - (coeffs.b**2)/(4*coeffs.a);
+                
+                problem = {
+                    equation: `${coeffs.a}x² + ${coeffs.b}x + ${coeffs.c} = 0`,
+                    type: 'standard',
+                    solution: {
+                        ...coeffs,
+                        roots: solveQuadratic(coeffs.a, coeffs.b, coeffs.c),
+                        vertexX: vertX,
+                        vertexY: vertY,
+                        discriminant: parseFloat((coeffs.b**2 - 4*coeffs.a*coeffs.c).toFixed(2))
+                    },
+                    hints: shuffleArray([
+                        `Discriminant: ${(coeffs.b**2 - 4*coeffs.a*coeffs.c).toFixed(2)}`,
+                        `Vertex: ${vertX.toFixed(2)}, ${vertY.toFixed(2)}`,
+                        `a-value: ${coeffs.a.toFixed(2)}`
+                    ]),
+                    hintIndex: 0
+                };
+            }
+
+            elements.problemType.textContent = `${problem.type.toUpperCase()} FORM`;
+            drawParabola(problem.solution.a, problem.solution.b, problem.solution.c);
+            return problem;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function drawParabola(a, b, c) {
+            const svg = document.querySelector('.parabola-path');
+            svg.innerHTML = '';
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            let d = 'M';
+
+            for(let x = -10; x <= 10; x += 0.5) {
+                const y = a*x*x + b*x + c;
+                const svgX = (x + 10) * 5;
+                const svgY = 100 - (y + 50);
+                d += `${svgX},${svgY} `;
+            }
+
+            path.setAttribute('d', d);
+            path.setAttribute('stroke', '#0ff');
+            svg.appendChild(path);
+        }
+
+        function parseComplex(str) {
+            const cleaned = str.replace(/ /g, '').toLowerCase();
+            const match = cleaned.match(/([+-]?\d*\.?\d*)([+-])(\d*\.?\d*)i?/);
+            if (!match) return null;
+            
+            const real = parseFloat(match[1] || "0");
+            const imag = parseFloat(match[3] || "0") * (match[2] === '-' ? -1 : 1);
+            return { real, imag };
+        }
+
+        function validateAnswers() {
+            const normalizeNumber = (str) => {
+                return parseFloat(str.replace(/,/g, '.').replace(/[^0-9.-]/g, ''));
+            };
+
+            try {
+                // Parse roots
+                const userRoots = [elements.root1.value, elements.root2.value]
+                    .map(root => {
+                        if (root.includes('i')) {
+                            const complex = parseComplex(root);
+                            return complex ? 
+                                `${complex.real.toFixed(2)}+${complex.imag.toFixed(2)}i` : 
+                                null;
+                        }
+                        return parseFloat(root).toFixed(2);
+                    })
+                    .filter(r => r !== null);
+
+                const solRoots = currentProblem.solution.roots.map(r => {
+                    return typeof r === 'string' ? r : r.toFixed(2);
+                });
+
+                // Parse vertex
+                const vertexParts = elements.vertex.value.split(/[ ,]+/);
+                const userVertX = normalizeNumber(vertexParts[0]);
+                const userVertY = normalizeNumber(vertexParts[1]);
+                
+                // Parse discriminant
+                const userDisc = normalizeNumber(elements.discriminant.value);
+
+                // Get solution values
+                const solVertX = currentProblem.solution.vertexX;
+                const solVertY = currentProblem.solution.vertexY;
+                const solDisc = currentProblem.solution.discriminant;
+
+                // Validate roots (order independent)
+                const rootValid = userRoots.length === 2 && (
+                    (userRoots[0] === solRoots[0] && userRoots[1] === solRoots[1]) ||
+                    (userRoots[0] === solRoots[1] && userRoots[1] === solRoots[0])
+                );
+
+                // Validate vertex with tolerance
+                const vertexValid = (
+                    Math.abs(userVertX - solVertX) <= 0.05 &&
+                    Math.abs(userVertY - solVertY) <= 0.05
+                );
+
+                // Validate discriminant with tolerance
+                const discValid = Math.abs(userDisc - solDisc) <= 0.05;
+
+                return rootValid && vertexValid && discValid;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function updateGame() {
+            score += Math.floor(timeLeft * currentLevel * 1.5 * scoreMultiplier);
+            currentLevel++;
+            timeLeft = 90;
+            scoreMultiplier = 1;
+            
+            elements.score.textContent = score;
+            elements.level.textContent = currentLevel;
+            elements.timer.textContent = timeLeft;
+            
+            newProblem();
+            updateHighScores();
+        }
+
+        function newProblem() {
+            currentProblem = generateProblem(currentLevel);
+            elements.problemText.textContent = currentProblem.equation;
+            elements.root1.value = elements.root2.value = elements.vertex.value = elements.discriminant.value = '';
+            elements.feedback.textContent = '';
+            elements.complexWarning.textContent = currentProblem.solution.roots.some(r => typeof r === 'string') 
+                ? "⚠️ Complex Roots - Flexible format: a±bi or a b" : "";
+        }
+
+        function showFeedback(message, correct) {
+            elements.feedback.textContent = message;
+            elements.feedback.className = correct ? 'correct' : 'incorrect';
+        }
+
+        function startTimer() {
+            timerId = setInterval(() => {
+                timeLeft--;
+                elements.timer.textContent = timeLeft;
+                
+                activePowerups = activePowerups.filter(p => {
+                    p.duration--;
+                    if(p.duration <= 0) {
+                        if(p.type === 'score') scoreMultiplier = 1;
+                        return false;
+                    }
+                    return true;
+                });
+
+                if(timeLeft <= 0) {
+                    clearInterval(timerId);
+                    showFeedback("TIME'S UP! Final Score: " + score, false);
+                    document.getElementById('submit-btn').disabled = true;
+                }
+            }, 1000);
+        }
+
+        function activatePowerup(type) {
+            if(powerups[type] > 0) {
+                powerups[type]--;
+                switch(type) {
+                    case 'time':
+                        timeLeft += 15;
+                        break;
+                    case 'score':
+                        scoreMultiplier = 2;
+                        activePowerups.push({
+                            type: 'score',
+                            duration: 120,
+                            onExpire: () => scoreMultiplier = 1
+                        });
+                        break;
+                    case 'hint':
+                        if (currentProblem.hintIndex < currentProblem.hints.length) {
+                            elements.feedback.textContent = currentProblem.hints[currentProblem.hintIndex];
+                            currentProblem.hintIndex++;
+                        }
+                        elements.feedback.className = 'correct';
+                        break;
+                }
+                updatePowerups();
+            }
+        }
+
+        function updatePowerups() {
+            document.querySelectorAll('.powerup').forEach((el, i) => {
+                el.textContent = `${['⏳','✨','💡'][i]} ×${powerups[Object.keys(powerups)[i]]}`;
+            });
+        }
+
+        function updateHighScores() {
+            const scores = JSON.parse(localStorage.getItem('quadScores') || '[]');
+            scores.push({
+                score: score,
+                level: currentLevel,
+                date: new Date().toLocaleString()
+            });
+            scores.sort((a, b) => b.score - a.score);
+            localStorage.setItem('quadScores', JSON.stringify(scores.slice(0, 5)));
+            
+            elements.scoreList.innerHTML = scores.slice(0, 5).map((s, i) => `
+                <div class="score-entry">
+                    <span>#${i+1}</span>
+                    <span>${s.score}</span>
+                    <span>Lvl ${s.level}</span>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('submit-btn').addEventListener('click', () => {
+            if(validateAnswers()) {
+                showFeedback(`Correct! +${Math.floor(timeLeft * currentLevel * 1.5)}`, true);
+                setTimeout(updateGame, 1500);
+            } else {
+                showFeedback("Incorrect! -5 seconds", false);
+                timeLeft = Math.max(timeLeft - 5, 0);
+            }
+        });
+
+        newProblem();
+        startTimer();
+        updateHighScores();
+    </script>
+</body>
+</html>

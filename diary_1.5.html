@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detective Game - Solve the Murder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #15140b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            font-size:30px ;
+        }
+        .quiz-container {
+            width: 80%;
+            background: rgba(253, 253, 251, 0.336);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border: 3px solid #5458a3;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        .collapsible {
+            background-color: #ddd;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            text-align: left;
+            border: none;
+            outline: none;
+            font-size: 38px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .content {
+            display: none;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .content img {
+            width: 100%;
+            max-width: 300px;
+            display: block;
+            margin: auto;
+            border-radius: 5px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            width: 80%;
+            display: block;
+            margin: 10px auto;
+        }
+        #result {
+            font-size: 20px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>🔎 Detective Game: Solve the Murder! 🔎</h2>
+    
+    <!-- Character Selection -->
+    <button class="collapsible">👤 Suspect Image</button>
+    <div class="content">
+        <img id="suspectImg" src="Famous actress.webp" alt="Suspect Image">
+        <select id="suspect" onchange="updateImage('suspect')">
+            <option value="Evelyn Gray" data-img="Famous actress.webp">Evelyn Gray</option>
+            <option value="Dr. Marcus Vaughn" data-img="Doctor.webp">Dr. Marcus Vaughn</option>
+            <option value="James Holloway" data-img="Butler.webp">James Holloway</option>
+            <option value="Alonzo De Luca" data-img="Celebrity Chef.webp">Alonzo De Luca</option>
+            <option value="Victoria Lancaster" data-img="suspect5.jpg">Victoria Lancaster</option>
+            <option value="Dorian Steele" data-img="Wealthy Buisnessman.webp">Dorian Steele</option>
+            <option value="Roxanne Pierce" data-img="Social Influencer.webp">Roxanne Pierce</option>
+        </select>
+    </div>
+
+    <!-- Weapon Selection -->
+    <button class="collapsible">🗡️ Weapon Image</button>
+    <div class="content">
+        <img id="weaponImg" src="Medieval Dagger.webp" alt="Weapon Image">
+        <select id="weapon" onchange="updateImage('weapon')">
+            <option value="Dagger" data-img="Medieval Dagger.webp">Dagger</option>
+            <option value="Flintlock Pistol" data-img="Flintlock.webp">Flintlock Pistol</option>
+            <option value="Spiked Mace" data-img="Spiked Mace.webp">Spiked Mace</option>
+            <option value="Katana" data-img="Katana.webp">Katana</option>
+            <option value="Poison Vial" data-img="POISON VIAL.webp">Poison Vial</option>
+            <option value="Dueling Pistol" data-img="PISTOL.webp">Dueling Pistol</option>
+            <option value="Battle Axe" data-img="VIXING AXE.webp">Battle Axe</option>
+            <option value="Roman Gladius Key" data-img="ROMAN GLADIUS SWORD.webp">ROMAN GLADIUS SWORD</option>
+        </select>
+    </div>
+
+    <!-- Venue Selection -->
+    <button class="collapsible">🏡 Venue Image</button>
+    <div class="content">
+        <img id="venueImg" src="LIVING.webp" alt="Venue Image">
+        <select id="venue" onchange="updateImage('venue')">
+            <option value="Living Room" data-img="LIVING.webp">Living Room</option>
+            <option value="High-Tech Study" data-img="Study.webp">High-Tech Study</option>
+            <option value="Modern Kitchen" data-img="Kitchen.webp">Modern Kitchen</option>
+            <option value="Rooftop Terrace" data-img="Rooftop terace.webp">Rooftop Terrace</option>
+            <option value="Grand Bedroom" data-img="Bedroom.webp">Grand Bedroom</option>
+            <option value="Private Indoor Pool" data-img="Indoor Pool.webp">Private Indoor Pool</option>
+            <option value="Wine Cellar" data-img="Wine Cellar.webp">Wine Cellar</option>
+            <option value="Secret Basement Room" data-img="Office.webp">Secret Basement Room</option>
+        </select>
+    </div>
+
+    <button onclick="checkSolution()">🔎 Solve the Case</button>
+
+    <p id="result"></p>
+</div>
+
+<script>
+    // Correct solution (modifiable for different rounds)
+    const correctSuspect = "Dr. Marcus Vaughn";
+    const correctWeapon = "Flintlock Pistol";
+    const correctVenue = "Living Room";
+
+    // Function to update images dynamically when selecting options
+    function updateImage(type) {
+        let selectedOption = document.getElementById(type).selectedOptions[0];
+        let newImageSrc = selectedOption.getAttribute("data-img");
+
+        if (type === "suspect") {
+            document.getElementById("suspectImg").src = newImageSrc;
+        } else if (type === "weapon") {
+            document.getElementById("weaponImg").src = newImageSrc;
+        } else if (type === "venue") {
+            document.getElementById("venueImg").src = newImageSrc;
+        }
+    }
+
+    // Function to check if the player's guess is correct
+    function checkSolution() {
+        let selectedSuspect = document.getElementById("suspect").value;
+        let selectedWeapon = document.getElementById("weapon").value;
+        let selectedVenue = document.getElementById("venue").value;
+        let resultText = document.getElementById("result");
+
+        if (selectedSuspect === correctSuspect && selectedWeapon === correctWeapon && selectedVenue === correctVenue) {
+            resultText.innerHTML = "🎉 You solved the case! The killer was " + selectedSuspect + " with the " + selectedWeapon + " in the " + selectedVenue + "!";
+            resultText.style.color = "limegreen";
+        } else {
+            resultText.innerHTML = "❌ Wrong guess! Keep investigating...";
+            resultText.style.color = "red";
+            window.location.href = "failure.html";
+        }
+    }
+
+    // Collapsible functionality
+    document.querySelectorAll(".collapsible").forEach(button => {
+        button.addEventListener("click", function () {
+            this.nextElementSibling.style.display = 
+                this.nextElementSibling.style.display === "block" ? "none" : "block";
+        });
+    });
+</script>
+
+</body>
+</html>

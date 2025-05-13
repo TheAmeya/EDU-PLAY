@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Ball Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        #header {
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        #simulation-container {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        #graph-container {
+            flex: 3;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #controls {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .value-display {
+            font-size: 14px;
+            color: #666;
+            text-align: right;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            flex: 1;
+        }
+        
+        #start-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #start-button:hover {
+            background-color: #45a049;
+        }
+        
+        #reset-button {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        #reset-button:hover {
+            background-color: #d32f2f;
+        }
+        
+        canvas {
+            background-color: white;
+            border-radius: 4px;
+            flex: 1;
+            width: 100%;
+        }
+        
+        #ground-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #8B4513;
+            z-index: 10;
+        }
+        
+        #ball {
+            position: absolute;
+            background-color: #2196F3;
+            border-radius: 50%;
+            z-index: 20;
+        }
+        
+        #graph {
+            position: relative;
+            flex: 1;
+        }
+        
+        #real-time-display {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .info-item {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Bouncing Ball Simulation</h1>
+    </div>
+    
+    <div id="simulation-container">
+        <div id="graph-container">
+            <div id="graph">
+                <canvas id="simulation-canvas"></canvas>
+                <div id="ground-line"></div>
+                <div id="ball"></div>
+            </div>
+            <div id="real-time-display">
+                <div class="info-item"><strong>Time:</strong> <span id="time-display">0.00</span> s</div>
+                <div class="info-item"><strong>Height:</strong> <span id="height-display">0.00</span> m</div>
+                <div class="info-item"><strong>Velocity:</strong> <span id="velocity-display">0.00</span> m/s</div>
+                <div class="info-item"><strong>Bounces:</strong> <span id="bounces-display">0</span></div>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <div class="control-group">
+                <label for="mass-slider">Mass (kg)</label>
+                <input type="range" id="mass-slider" min="1" max="20" step="0.1" value="10">
+                <div class="value-display" id="mass-value">10.0 kg</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="restitution-slider">Coefficient of Restitution</label>
+                <input type="range" id="restitution-slider" min="0.1" max="0.9" step="0.01" value="0.5">
+                <div class="value-display" id="restitution-value">0.50</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="height-slider">Initial Height (m)</label>
+                <input type="range" id="height-slider" min="1" max="20" step="0.1" value="10">
+                <div class="value-display" id="height-value">10.0 m</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="gravity-slider">Gravity (m/s²)</label>
+                <input type="range" id="gravity-slider" min="1" max="20" step="0.1" value="9.81">
+                <div class="value-display" id="gravity-value">9.81 m/s²</div>
+            </div>
+            
+            <div class="button-group">
+                <button id="start-button">Start</button>
+                <button id="reset-button">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const BALL_RADIUS = 10; // pixels
+        const GROUND_HEIGHT = 30; // pixels from bottom
+        const SIMULATION_DURATION = 10; // seconds
+        
+        // Simulation variables
+        let mass = 10.0; // kg
+        let coefficientOfRestitution = 0.5;
+        let initialHeight = 10.0; // meters
+        let gravity = 9.81; // m/s²
+        let ballRadius = 0.5; // meters
+        
+        // Simulation state
+        let time = 0;
+        let height = initialHeight;
+        let velocity = 0;
+        let bounces = 0;
+        let isSimulating = false;
+        let animationId = null;
+        let lastTimestamp = 0;
+        
+        // DOM elements
+        const canvas = document.getElementById('simulation-canvas');
+        const ctx = canvas.getContext('2d');
+        const ball = document.getElementById('ball');
+        const groundLine = document.getElementById('ground-line');
+        
+        // Control elements
+        const massSlider = document.getElementById('mass-slider');
+        const restitutionSlider = document.getElementById('restitution-slider');
+        const heightSlider = document.getElementById('height-slider');
+        const gravitySlider = document.getElementById('gravity-slider');
+        
+        const massValue = document.getElementById('mass-value');
+        const restitutionValue = document.getElementById('restitution-value');
+        const heightValue = document.getElementById('height-value');
+        const gravityValue = document.getElementById('gravity-value');
+        
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        
+        const timeDisplay = document.getElementById('time-display');
+        const heightDisplay = document.getElementById('height-display');
+        const velocityDisplay = document.getElementById('velocity-display');
+        const bouncesDisplay = document.getElementById('bounces-display');
+        
+        // Data for plotting
+        let timeData = [];
+        let heightData = [];
+        let pathPoints = [];
+        
+        // Initialize simulation
+        function initSimulation() {
+            // Set up canvas
+            resizeCanvas();
+            
+            // Set initial ball position
+            updateBallPosition();
+            
+            // Position ground line
+            positionGroundLine();
+            
+            // Initialize data arrays
+            timeData = [0];
+            heightData = [initialHeight];
+            pathPoints = [{x: 0, y: heightToPixel(initialHeight)}];
+            
+            // Update displays
+            updateDisplays();
+            drawPath();
+        }
+        
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = document.getElementById('graph');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        // Position ground line at bottom of canvas
+        function positionGroundLine() {
+            const container = document.getElementById('graph');
+            groundLine.style.bottom = `${GROUND_HEIGHT}px`;
+            groundLine.style.width = `${container.clientWidth}px`;
+        }
+        
+        // Convert meters to pixels for display
+        function heightToPixel(heightMeters) {
+            const container = document.getElementById('graph');
+            const maxHeight = initialHeight * 1.2; // Add 20% padding
+            return container.clientHeight - GROUND_HEIGHT - (heightMeters / maxHeight * (container.clientHeight - GROUND_HEIGHT * 2));
+        }
+        
+        // Convert time to x position
+        function timeToPixel(timeSeconds) {
+            const container = document.getElementById('graph');
+            return (timeSeconds / SIMULATION_DURATION) * container.clientWidth;
+        }
+        
+        // Update ball position on screen
+        function updateBallPosition() {
+            const xPos = timeToPixel(time);
+            const yPos = heightToPixel(height);
+            
+            ball.style.width = `${BALL_RADIUS * 2}px`;
+            ball.style.height = `${BALL_RADIUS * 2}px`;
+            ball.style.left = `${xPos - BALL_RADIUS}px`;
+            ball.style.top = `${yPos - BALL_RADIUS}px`;
+        }
+        
+        // Update real-time displays
+        function updateDisplays() {
+            timeDisplay.textContent = time.toFixed(2);
+            heightDisplay.textContent = height.toFixed(2);
+            velocityDisplay.textContent = velocity.toFixed(2);
+            bouncesDisplay.textContent = bounces;
+        }
+        
+        // Draw the ball's path
+        function drawPath() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (pathPoints.length < 2) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+            
+            for (let i = 1; i < pathPoints.length; i++) {
+                ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+            }
+            
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        // Physics update
+        function updatePhysics(dt) {
+            // Apply gravity
+            velocity -= gravity * dt;
+            
+            // Update position
+            height += velocity * dt;
+            
+            // Check for collision with ground
+            if (height <= ballRadius) {
+                height = ballRadius;
+                velocity = -velocity * coefficientOfRestitution;
+                bounces++;
+            }
+            
+            // Record data
+            time += dt;
+            timeData.push(time);
+            heightData.push(height);
+            
+            // Add point to path
+            pathPoints.push({
+                x: timeToPixel(time),
+                y: heightToPixel(height)
+            });
+        }
+        
+        // Animation loop
+        function animate(timestamp) {
+            if (!lastTimestamp) {
+                lastTimestamp = timestamp;
+            }
+            
+            const elapsed = (timestamp - lastTimestamp) / 1000; // Convert to seconds
+            lastTimestamp = timestamp;
+            
+            if (isSimulating) {
+                updatePhysics(elapsed);
+                updateBallPosition();
+                updateDisplays();
+                drawPath();
+                
+                // Stop simulation after duration
+                if (time >= SIMULATION_DURATION) {
+                    stopSimulation();
+                    return;
+                }
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Start simulation
+        function startSimulation() {
+            if (isSimulating) return;
+            
+            isSimulating = true;
+            startButton.textContent = "Pause";
+            lastTimestamp = 0;
+            
+            // Reset data if we're at the end
+            if (time >= SIMULATION_DURATION) {
+                resetSimulation();
+            }
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // Pause simulation
+        function pauseSimulation() {
+            isSimulating = false;
+            startButton.textContent = "Resume";
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        // Stop simulation
+        function stopSimulation() {
+            isSimulating = false;
+            startButton.textContent = "Start";
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        // Reset simulation
+        function resetSimulation() {
+            stopSimulation();
+            
+            time = 0;
+            height = initialHeight;
+            velocity = 0;
+            bounces = 0;
+            
+            initSimulation();
+        }
+        
+        // Event listeners
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            positionGroundLine();
+            updateBallPosition();
+            drawPath();
+        });
+        
+        massSlider.addEventListener('input', () => {
+            mass = parseFloat(massSlider.value);
+            massValue.textContent = `${mass.toFixed(1)} kg`;
+        });
+        
+        restitutionSlider.addEventListener('input', () => {
+            coefficientOfRestitution = parseFloat(restitutionSlider.value);
+            restitutionValue.textContent = coefficientOfRestitution.toFixed(2);
+        });
+        
+        heightSlider.addEventListener('input', () => {
+            initialHeight = parseFloat(heightSlider.value);
+            heightValue.textContent = `${initialHeight.toFixed(1)} m`;
+        });
+        
+        gravitySlider.addEventListener('input', () => {
+            gravity = parseFloat(gravitySlider.value);
+            gravityValue.textContent = `${gravity.toFixed(2)} m/s²`;
+        });
+        
+        startButton.addEventListener('click', () => {
+            if (isSimulating) {
+                pauseSimulation();
+            } else {
+                startSimulation();
+            }
+        });
+        
+        resetButton.addEventListener('click', resetSimulation);
+        
+        // Initialize
+        initSimulation();
+    </script>
+</body>
+</html>

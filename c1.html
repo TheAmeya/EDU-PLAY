@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Density Simulation</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f4f4f4;
+      margin: 0;
+    }
+
+    canvas {
+      border: 1px solid #aaa;
+      display: block;
+      margin: 20px auto;
+      background: white;
+    }
+
+    .sliders {
+      width: 800px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    label {
+      display: flex;
+      justify-content: space-between;
+      background: #eee;
+      padding: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="simulationCanvas" width="1000" height="600"></canvas>
+
+  <div class="sliders">
+    <label>Mass (A): <input type="range" id="massA" min="1" max="20" step="0.1" value="2"> <span id="massAVal">2.0</span></label>
+    <label>Volume (A): <input type="range" id="volumeA" min="1" max="10" step="0.1" value="5"> <span id="volumeAVal">5.0</span></label>
+    <label>Mass (B): <input type="range" id="massB" min="1" max="20" step="0.1" value="8"> <span id="massBVal">8.0</span></label>
+    <label>Volume (B): <input type="range" id="volumeB" min="1" max="10" step="0.1" value="4"> <span id="volumeBVal">4.0</span></label>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const waterLevel = 400;
+    const gravity = 2;
+
+    const sliders = {
+      massA: document.getElementById("massA"),
+      volumeA: document.getElementById("volumeA"),
+      massB: document.getElementById("massB"),
+      volumeB: document.getElementById("volumeB"),
+      massAVal: document.getElementById("massAVal"),
+      volumeAVal: document.getElementById("volumeAVal"),
+      massBVal: document.getElementById("massBVal"),
+      volumeBVal: document.getElementById("volumeBVal"),
+    };
+
+    class SimObject {
+      constructor(label, mass, volume, color, x, y) {
+        this.label = label;
+        this.mass = mass;
+        this.volume = volume;
+        this.color = color;
+        this.x = x;
+        this.y = y;
+        this.width = 80;
+        this.height = 80;
+        this.density = mass / volume;
+        this.dragging = false;
+      }
+
+      draw(ctx) {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        ctx.fillStyle = "#000";
+        ctx.font = "16px sans-serif";
+        ctx.fillText(this.label, this.x + 10, this.y - 10);
+        ctx.fillText(`D: ${this.density.toFixed(2)} kg/L`, this.x, this.y + this.height + 16);
+      }
+
+      contains(mx, my) {
+        return mx > this.x && mx < this.x + this.width && my > this.y && my < this.y + this.height;
+      }
+
+      updateDensity(mass, volume) {
+        this.mass = mass;
+        this.volume = volume;
+        this.density = mass / volume;
+      }
+
+      updatePosition(mouseX, mouseY) {
+        if (this.dragging) {
+          this.x = mouseX - this.width / 2;
+          this.y = mouseY - this.height / 2;
+        }
+      }
+
+      floatOrSink() {
+        if (this.y + this.height > waterLevel) {
+          if (this.density > 1) this.y += gravity;
+          else this.y -= gravity;
+
+          this.y = Math.max(waterLevel - this.height, Math.min(this.y, canvas.height - this.height));
+        }
+      }
+    }
+
+    const objects = [
+      new SimObject("Block A", 2.0, 5.0, "#999", 250, 200),
+      new SimObject("Block B", 8.0, 4.0, "#Ff0000", 500, 200)
+    ];
+
+    function drawWater() {
+      ctx.fillStyle = "#add8e6";
+      ctx.fillRect(0, waterLevel, canvas.width, canvas.height - waterLevel);
+    }
+
+    function updateSliders() {
+      sliders.massAVal.textContent = sliders.massA.value;
+      sliders.volumeAVal.textContent = sliders.volumeA.value;
+      sliders.massBVal.textContent = sliders.massB.value;
+      sliders.volumeBVal.textContent = sliders.volumeB.value;
+
+      objects[0].updateDensity(parseFloat(sliders.massA.value), parseFloat(sliders.volumeA.value));
+      objects[1].updateDensity(parseFloat(sliders.massB.value), parseFloat(sliders.volumeB.value));
+    }
+
+    let draggingObject = null;
+
+    canvas.addEventListener("mousedown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      for (const obj of objects) {
+        if (obj.contains(mouseX, mouseY)) {
+          obj.dragging = true;
+          draggingObject = obj;
+          break;
+        }
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      for (const obj of objects) obj.dragging = false;
+      draggingObject = null;
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (draggingObject) {
+        const rect = canvas.getBoundingClientRect();
+        draggingObject.updatePosition(e.clientX - rect.left, e.clientY - rect.top);
+      }
+    });
+
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawWater();
+      updateSliders();
+
+      for (const obj of objects) {
+        obj.floatOrSink();
+        obj.draw(ctx);
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>

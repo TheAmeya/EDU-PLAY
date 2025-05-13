@@ -1,0 +1,86 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Diary</title>
+    <style>
+        body {
+            font-family: 'Sans serief', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .diary-container {
+            width: 70%;
+            margin-top: 10%;
+            background: #fffaf0;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 3px solid #868de7;
+            text-align: center;
+            position: relative;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .button {
+            flex: 1;
+            padding: 20px 0;
+            background: #00c7e6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: 0.3s;
+            text-align: center;
+            margin: 0 5px; 
+        }
+        .button:hover {
+            background: #00ccad;
+        }
+        .diary-page {
+            width: 80%;
+            height: 800px;
+            background: repeating-linear-gradient(
+                white 0px, white 24px, #d3c0a0 25px
+            );
+            border: 2px solid #f06262;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            overflow-y: auto;
+            font-size: 18px;
+            line-height: 25px;
+        }
+       
+    </style>
+</head>
+<body>
+    <div class="diary-page">
+        <h2 style="color: #8b6f47;">How are you feeling today?</h2>
+        <div class="button-container">
+            <center>
+            <button class="button" onclick="goToPage('case1')">investigate 🔎</button>
+            </center>
+        </div>
+    </div>
+
+    <script>
+        function goToPage(mood) {
+            window.location.href = mood + "_diary.html";
+        }
+    </script>
+</body>
+</html>

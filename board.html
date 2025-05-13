@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Board Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            padding: 20px;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 80px);
+            gap: 5px;
+            justify-content: center;
+            margin: 20px auto;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .cell {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .player { background-color: #42f5dd; }
+        .computer { background-color: #f5426c; }
+        .controls {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+        .legend {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .legend div {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+        .player-color { background-color: #42f5dd; }
+        .computer-color { background-color: #f5426c; }
+        button {
+            background: #ffcc00;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #ff9900;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz Board Game</h1>
+        <div class="legend">
+            <div><div class="color-box player-color"></div>Player</div>
+            <div><div class="color-box computer-color"></div>Computer</div>
+        </div>
+        <div class="board" id="board"></div>
+        <div class="controls">
+            <button onclick="game.rollDice()">Roll Dice</button>
+            <p id="message"></p>
+            <p>Turns: <span id="turns">0</span></p>
+            <p>Correct Answers: <span id="correct">0</span></p>
+            <p>Incorrect Answers: <span id="incorrect">0</span></p>
+        </div>
+    </div>
+    <script>
+        class QuizBoardGame {
+            constructor() {
+                this.boardSize = 90;
+                this.playerPosition = 0;
+                this.computerPosition = 0;
+                this.turns = 0;
+                this.correctAnswers = 0;
+                this.incorrectAnswers = 0;
+                this.questions = this.generateQuestions();
+                this.createBoard();
+                this.updateStats();
+            }
+            
+            generateQuestions() {
+                return[
+    { "question": "Identify the gerund in the sentence:\n 'Swimming is my favorite hobby.'", answer: "swimming" },
+    { "question": "Convert the gerund phrase into an infinitive phrase:\n 'She enjoys reading books.'", answer: "to read books" },
+    { "question": "Choose the correct participle to complete the sentence:\n 'The ___ (breaking/broken) window needs to be repaired.'", answer: "broken" },
+    { "question": "Identify whether the bolded word is a gerund, participle, or infinitive:\n 'I love **to dance** at parties.'", answer: "infinitive" },
+    { "question": "Fill in the blank with the correct infinitive or gerund:\n 'He decided ___ (to leave/leaving) early to avoid traffic.'", answer: "to leave" },
+    { "question": "Rewrite the sentence in passive voice:\n 'She is writing a novel.'", answer: "A novel is being written by her." },
+    { "question": "Fill in the blank with the correct verb tense:\n 'By this time next year, I ___ (complete) my studies.'", answer: "will have completed" },
+    { "question": "Correct the error in this sentence:\n 'If he will work hard, he will pass the exam.'", answer: "If he works hard, he will pass the exam." },
+    { "question": "Choose the correct tense for the given sentence:\n 'I wish I ___ (knew/know) the answer earlier.'", answer: "knew" },
+    { "question": "Change the verb into past perfect tense:\n 'She (finish) her project before the deadline.'", answer: "had finished" },
+    { "question": "Identify the noun clause in the sentence:\n 'I don’t know where she went.'", answer: "where she went" },
+    { "question": "Combine the sentences using a relative clause:\n 'This is the book. I borrowed it from the library.'", answer: "This is the book that I borrowed from the library." },
+    { "question": "Identify the adverbial clause in the sentence:\n 'She left early because she wasn’t feeling well.'", answer: "because she wasn’t feeling well" },
+    { "question": "Rewrite the sentence using a conditional clause:\n 'You didn’t study. That’s why you failed.'", answer: "If you had studied, you wouldn’t have failed." },
+    { "question": "Identify the type of sentence (simple, compound, complex):\n 'Although it was raining, we continued playing outside.'", answer: "complex" }
+];
+            }
+            
+            createBoard() {
+                const board = document.getElementById("board");
+                board.innerHTML = "";
+                for (let i = 0; i < this.boardSize; i++) {
+                    let cell = document.createElement("div");
+                    cell.classList.add("cell");
+                    cell.id = `cell-${i}`;
+                    board.appendChild(cell);
+                }
+                this.updateBoard();
+            }
+            
+            async rollDice() {
+                if (this.playerPosition >= this.boardSize - 1 || this.computerPosition >= this.boardSize - 1) return;
+
+                this.turns++;
+                let roll = Math.floor(Math.random() * 6) + 1;
+                document.getElementById("message").innerText = `You rolled a ${roll}`;
+                
+                let newPosition = this.playerPosition + roll;
+                if (newPosition >= this.boardSize - 1) {
+                    this.playerPosition = this.boardSize - 1;
+                    this.updateBoard();
+                    document.getElementById("message").innerText = "You won!";
+                    return;
+                }
+                
+                let questionObj = this.questions[newPosition % this.questions.length];
+                let answer = prompt(questionObj.question);
+                
+                if (answer && answer.trim().toLowerCase() === questionObj.answer.toLowerCase()) {
+                    this.playerPosition = newPosition;
+                    this.correctAnswers++;
+                } else {
+                    this.incorrectAnswers++;
+                }
+                
+                this.updateBoard();
+                this.updateStats();
+                
+                setTimeout(() => this.computerTurn(), 1000);
+            }
+            
+            computerTurn() {
+                if (this.computerPosition >= this.boardSize - 1) return;
+
+                let roll = Math.floor(Math.random() * 6) + 1;
+                document.getElementById("message").innerText = `Computer rolled a ${roll}`;
+                
+                this.computerPosition += roll;
+                if (this.computerPosition >= this.boardSize - 1) {
+                    this.computerPosition = this.boardSize - 1;
+                    document.getElementById("message").innerText = "Computer won!";
+                }
+
+                this.updateBoard();
+            }
+            
+            updateBoard() {
+                document.querySelectorAll(".cell").forEach(cell => cell.classList.remove("player", "computer"));
+                
+                document.getElementById(`cell-${this.playerPosition}`).classList.add("player");
+                document.getElementById(`cell-${this.computerPosition}`).classList.add("computer");
+            }
+            
+            updateStats() {
+                document.getElementById("turns").innerText = this.turns;
+                document.getElementById("correct").innerText = this.correctAnswers;
+                document.getElementById("incorrect").innerText = this.incorrectAnswers;
+            }
+        }
+        
+        const game = new QuizBoardGame();
+    </script>
+</body>
+</html>

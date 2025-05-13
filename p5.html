@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring-Mass System Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            overflow: hidden;
+            user-select: none;
+        }
+        
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        #simulation-area {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #controls {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ccc;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider-label {
+            width: 180px;
+        }
+        
+        .slider {
+            width: 200px;
+        }
+        
+        .button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        
+        .button:hover {
+            background-color: #45a049;
+        }
+        
+        .button.reset {
+            background-color: #ff9800;
+        }
+        
+        .button.reset:hover {
+            background-color: #e68a00;
+        }
+        
+        .button.fullscreen {
+            background-color: #9fa8da;
+        }
+        
+        .button.fullscreen:hover {
+            background-color: #8c9eff;
+        }
+        
+        #simulation-info {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        #status {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        #graph-container {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            width: 400px;
+            height: 200px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="simulation-area">
+            <canvas id="simulation-canvas"></canvas>
+            
+            <div id="simulation-info">
+                <div id="status">Ready</div>
+                <div id="displacement">Displacement: 0.0 px</div>
+                <div id="velocity">Velocity: 0.0 px/s</div>
+                <div id="acceleration">Acceleration: 0.0 px/s²</div>
+                <div id="energy">Total Energy: 0.0 J</div>
+            </div>
+            
+            <div id="graph-container">
+                <canvas id="graph-canvas"></canvas>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <div class="control-group">
+                <div class="slider-container">
+                    <span class="slider-label" id="mass-label">Mass (kg): 1.00</span>
+                    <input type="range" class="slider" id="mass-slider" min="0.1" max="10" step="0.1" value="1.0">
+                </div>
+                
+                <div class="slider-container">
+                    <span class="slider-label" id="k-label">Spring Constant (N/m): 10.00</span>
+                    <input type="range" class="slider" id="k-slider" min="1" max="50" step="0.1" value="10">
+                </div>
+                
+                <div class="slider-container">
+                    <span class="slider-label" id="damping-label">Damping Coefficient: 0.10</span>
+                    <input type="range" class="slider" id="damping-slider" min="0" max="1" step="0.01" value="0.1">
+                </div>
+                
+                <div class="slider-container">
+                    <span class="slider-label" id="displacement-label">Initial Displacement (px): 100</span>
+                    <input type="range" class="slider" id="displacement-slider" min="10" max="200" step="1" value="100">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <button id="start-button" class="button">Start</button>
+                <button id="reset-button" class="button reset">Reset</button>
+                <button id="fullscreen-button" class="button fullscreen">Toggle Fullscreen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const G = 9.81;  // m/s²
+        const FPS = 60;
+        const COLORS = {
+            WHITE: '#ffffff',
+            BLACK: '#000000',
+            BLUE: '#0000ff',
+            RED: '#ff0000',
+            GREEN: '#00ff00',
+            GRAY: '#c8c8c8',
+            DARK_GRAY: '#646464',
+            SPRING: '#9696ff'
+        };
+
+        // DOM elements
+        const container = document.getElementById('container');
+        const simCanvas = document.getElementById('simulation-canvas');
+        const graphCanvas = document.getElementById('graph-canvas');
+        const simCtx = simCanvas.getContext('2d');
+        const graphCtx = graphCanvas.getContext('2d');
+        
+        // Control elements
+        const massSlider = document.getElementById('mass-slider');
+        const kSlider = document.getElementById('k-slider');
+        const dampingSlider = document.getElementById('damping-slider');
+        const displacementSlider = document.getElementById('displacement-slider');
+        
+        const massLabel = document.getElementById('mass-label');
+        const kLabel = document.getElementById('k-label');
+        const dampingLabel = document.getElementById('damping-label');
+        const displacementLabel = document.getElementById('displacement-label');
+        
+        const startButton = document.getElementById('start-button');
+        const resetButton = document.getElementById('reset-button');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        
+        const statusDisplay = document.getElementById('status');
+        const displacementDisplay = document.getElementById('displacement');
+        const velocityDisplay = document.getElementById('velocity');
+        const accelerationDisplay = document.getElementById('acceleration');
+        const energyDisplay = document.getElementById('energy');
+
+        // Simulation variables
+        let width, height;
+        let mass = parseFloat(massSlider.value);
+        let k = parseFloat(kSlider.value);
+        let damping = parseFloat(dampingSlider.value);
+        let initialDisplacement = parseFloat(displacementSlider.value);
+        
+        let simulating = false;
+        let times = [];
+        let positions = [];
+        
+        // Spring-Mass System
+        class SpringMassSystem {
+            constructor() {
+                this.reset(mass, k, damping, initialDisplacement);
+            }
+            
+            reset(mass, k, damping, initialDisplacement) {
+                this.mass = mass;
+                this.k = k;
+                this.damping = damping;
+                this.equilibriumY = height / 2;
+                this.y = this.equilibriumY + initialDisplacement;
+                this.velocity = 0;
+                this.acceleration = 0;
+                this.time = 0;
+                this.springCoils = 10;
+                this.massRadius = 20 + mass;
+                this.springLength = 200;
+                this.positions = [];
+                this.times = [];
+            }
+            
+            update(dt) {
+                // Calculate spring force (Hooke's Law: F = -kx)
+                const displacement = this.y - this.equilibriumY;
+                const springForce = -this.k * displacement;
+                
+                // Calculate damping force (F = -bv)
+                const dampingForce = -this.damping * this.velocity;
+                
+                // Net force
+                const netForce = springForce + dampingForce;
+                
+                // Update acceleration (F = ma)
+                this.acceleration = netForce / this.mass;
+                
+                // Update velocity and position
+                this.velocity += this.acceleration * dt;
+                this.y += this.velocity * dt;
+                
+                // Record data for plotting
+                this.time += dt;
+                this.times.push(this.time);
+                this.positions.push(this.y - this.equilibriumY);
+            }
+            
+            draw(ctx) {
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+                
+                // Draw ceiling
+                const ceilingY = this.equilibriumY - this.springLength - 50;
+                ctx.beginPath();
+                ctx.moveTo(width/2 - 150, ceilingY);
+                ctx.lineTo(width/2 + 150, ceilingY);
+                ctx.lineWidth = 5;
+                ctx.strokeStyle = COLORS.BLACK;
+                ctx.stroke();
+                
+                // Draw spring
+                const springTop = {x: width/2, y: ceilingY};
+                const springBottom = {x: width/2, y: this.y - this.massRadius};
+                this.drawSpring(ctx, springTop, springBottom, this.springCoils);
+                
+                // Draw mass
+                ctx.beginPath();
+                ctx.arc(width/2, this.y, this.massRadius, 0, Math.PI * 2);
+                ctx.fillStyle = COLORS.RED;
+                ctx.fill();
+                ctx.strokeStyle = COLORS.BLACK;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw equilibrium line
+                ctx.beginPath();
+                ctx.moveTo(width/2 - 100, this.equilibriumY);
+                ctx.lineTo(width/2 + 100, this.equilibriumY);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = COLORS.BLUE;
+                ctx.stroke();
+            }
+            
+            drawSpring(ctx, top, bottom, coils) {
+                const length = bottom.y - top.y;
+                const coilHeight = length / coils;
+                const coilWidth = 30;
+                
+                ctx.beginPath();
+                ctx.moveTo(top.x, top.y);
+                
+                for (let i = 1; i < coils; i++) {
+                    const x = width/2 + coilWidth * (0.5 - (i % 2));
+                    const y = top.y + i * coilHeight;
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.lineTo(bottom.x, bottom.y);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = COLORS.SPRING;
+                ctx.stroke();
+            }
+        }
+
+        // Create the system
+        const system = new SpringMassSystem();
+
+        // Update simulation info display
+        function updateInfo() {
+            const displacement = system.y - system.equilibriumY;
+            const energy = 0.5 * system.k * displacement**2 + 0.5 * system.mass * system.velocity**2;
+            
+            displacementDisplay.textContent = `Displacement: ${displacement.toFixed(1)} px`;
+            velocityDisplay.textContent = `Velocity: ${system.velocity.toFixed(1)} px/s`;
+            accelerationDisplay.textContent = `Acceleration: ${system.acceleration.toFixed(1)} px/s²`;
+            energyDisplay.textContent = `Total Energy: ${energy.toFixed(1)} J`;
+            
+            if (simulating) {
+                statusDisplay.textContent = "Simulation Running...";
+                statusDisplay.style.color = COLORS.GREEN;
+            } else {
+                statusDisplay.textContent = "Ready";
+                statusDisplay.style.color = COLORS.BLUE;
+            }
+        }
+
+        // Draw the graph
+        function drawGraph() {
+            if (system.times.length < 2) return;
+            
+            const graphWidth = graphCanvas.width;
+            const graphHeight = graphCanvas.height;
+            const padding = 20;
+            
+            // Clear graph
+            graphCtx.clearRect(0, 0, graphWidth, graphHeight);
+            
+            // Find min/max values for scaling
+            const minTime = Math.min(...system.times);
+            const maxTime = Math.max(...system.times);
+            const minPos = Math.min(...system.positions);
+            const maxPos = Math.max(...system.positions);
+            
+            // Add some padding to the y-scale
+            const yRange = maxPos - minPos;
+            const yPadding = yRange * 0.1;
+            const scaledMinPos = minPos - yPadding;
+            const scaledMaxPos = maxPos + yPadding;
+            
+            // Scale factors
+            const xScale = (graphWidth - 2 * padding) / (maxTime - minTime || 1);
+            const yScale = (graphHeight - 2 * padding) / (scaledMaxPos - scaledMinPos || 1);
+            
+            // Draw axes
+            graphCtx.beginPath();
+            graphCtx.moveTo(padding, padding);
+            graphCtx.lineTo(padding, graphHeight - padding);
+            graphCtx.lineTo(graphWidth - padding, graphHeight - padding);
+            graphCtx.strokeStyle = COLORS.BLACK;
+            graphCtx.lineWidth = 1;
+            graphCtx.stroke();
+            
+            // Draw labels
+            graphCtx.font = '10px Arial';
+            graphCtx.fillStyle = COLORS.BLACK;
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText('Time (s)', graphWidth / 2, graphHeight - 5);
+            
+            graphCtx.save();
+            graphCtx.translate(5, graphHeight / 2);
+            graphCtx.rotate(-Math.PI / 2);
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText('Displacement (px)', 0, 0);
+            graphCtx.restore();
+            
+            // Draw grid lines
+            graphCtx.strokeStyle = COLORS.GRAY;
+            graphCtx.lineWidth = 0.5;
+            
+            // Vertical grid lines (time)
+            const timeStep = Math.max(0.5, Math.ceil((maxTime - minTime) / 5 * 10) / 10);
+            for (let t = Math.ceil(minTime / timeStep) * timeStep; t <= maxTime; t += timeStep) {
+                const x = padding + (t - minTime) * xScale;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, padding);
+                graphCtx.lineTo(x, graphHeight - padding);
+                graphCtx.stroke();
+                
+                graphCtx.fillText(t.toFixed(1), x, graphHeight - 5);
+            }
+            
+            // Horizontal grid lines (position)
+            const posStep = Math.max(10, Math.ceil((scaledMaxPos - scaledMinPos) / 5 / 10) * 10);
+            for (let p = Math.ceil(scaledMinPos / posStep) * posStep; p <= scaledMaxPos; p += posStep) {
+                const y = graphHeight - padding - (p - scaledMinPos) * yScale;
+                graphCtx.beginPath();
+                graphCtx.moveTo(padding, y);
+                graphCtx.lineTo(graphWidth - padding, y);
+                graphCtx.stroke();
+                
+                graphCtx.fillText(p.toFixed(0), padding - 15, y + 3);
+            }
+            
+            // Draw data
+            graphCtx.beginPath();
+            graphCtx.moveTo(
+                padding + (system.times[0] - minTime) * xScale,
+                graphHeight - padding - (system.positions[0] - scaledMinPos) * yScale
+            );
+            
+            for (let i = 1; i < system.times.length; i++) {
+                graphCtx.lineTo(
+                    padding + (system.times[i] - minTime) * xScale,
+                    graphHeight - padding - (system.positions[i] - scaledMinPos) * yScale
+                );
+            }
+            
+            graphCtx.strokeStyle = COLORS.BLUE;
+            graphCtx.lineWidth = 2;
+            graphCtx.stroke();
+        }
+
+        // Main animation loop
+        function animate() {
+            if (simulating) {
+                system.update(1/FPS);
+                
+                // Update graph periodically
+                if (system.times.length > 10 && system.times.length % 30 === 0) {
+                    drawGraph();
+                }
+            }
+            
+            system.draw(simCtx);
+            updateInfo();
+            requestAnimationFrame(animate);
+        }
+
+        // Handle window resize
+        function handleResize() {
+            width = container.clientWidth;
+            height = container.clientHeight - document.getElementById('controls').clientHeight;
+            
+            simCanvas.width = width;
+            simCanvas.height = height;
+            
+            graphCanvas.width = Math.min(400, width - 40);
+            graphCanvas.height = 200;
+            
+            // Redraw everything
+            system.draw(simCtx);
+            drawGraph();
+        }
+
+        // Event listeners
+        massSlider.addEventListener('input', () => {
+            mass = parseFloat(massSlider.value);
+            massLabel.textContent = `Mass (kg): ${mass.toFixed(2)}`;
+        });
+        
+        kSlider.addEventListener('input', () => {
+            k = parseFloat(kSlider.value);
+            kLabel.textContent = `Spring Constant (N/m): ${k.toFixed(2)}`;
+        });
+        
+        dampingSlider.addEventListener('input', () => {
+            damping = parseFloat(dampingSlider.value);
+            dampingLabel.textContent = `Damping Coefficient: ${damping.toFixed(2)}`;
+        });
+        
+        displacementSlider.addEventListener('input', () => {
+            initialDisplacement = parseFloat(displacementSlider.value);
+            displacementLabel.textContent = `Initial Displacement (px): ${initialDisplacement}`;
+        });
+        
+        startButton.addEventListener('click', () => {
+            simulating = true;
+            system.reset(mass, k, damping, initialDisplacement);
+            drawGraph();
+        });
+        
+        resetButton.addEventListener('click', () => {
+            simulating = false;
+            system.reset(mass, k, damping, initialDisplacement);
+            drawGraph();
+        });
+        
+        fullscreenButton.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+        
+        window.addEventListener('resize', handleResize);
+        
+        // Initialize
+        handleResize();
+        animate();
+    </script>
+</body>
+</html>

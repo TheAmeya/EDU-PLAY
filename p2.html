@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spring-Mass System Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #dfe9f3, #ffffff);
+    }
+    #controls {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      background: #ffffffee;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 2;
+    }
+    .slider-group {
+      margin-bottom: 12px;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+    button {
+      margin: 5px;
+      padding: 8px 18px;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <div class="slider-group">
+      <label>Mass: <span id="massVal">1.0</span></label><br />
+      <input type="range" id="mass" min="0.1" max="10" step="0.1" value="1.0" />
+    </div>
+    <div class="slider-group">
+      <label>Spring Constant (k): <span id="kVal">10.0</span></label><br />
+      <input type="range" id="k" min="1" max="50" step="1" value="10" />
+    </div>
+    <div class="slider-group">
+      <label>Damping: <span id="dampingVal">0.1</span></label><br />
+      <input type="range" id="damping" min="0" max="1" step="0.01" value="0.1" />
+    </div>
+    <div class="slider-group">
+      <label>Initial Displacement: <span id="displacementVal">100</span></label><br />
+      <input type="range" id="displacement" min="10" max="200" step="1" value="100" />
+    </div>
+    <button id="startBtn">Start</button>
+    <button id="resetBtn">Reset</button>
+    <button id="exportBtn">Export CSV</button>
+  </div>
+  <canvas id="canvas"></canvas>
+  <canvas id="chartCanvas" width="800" height="300" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight - 350;
+
+    const chartCanvas = document.getElementById('chartCanvas');
+    let energyChart;
+
+    let massSlider = document.getElementById('mass');
+    let kSlider = document.getElementById('k');
+    let dampingSlider = document.getElementById('damping');
+    let displacementSlider = document.getElementById('displacement');
+    let massVal = document.getElementById('massVal');
+    let kVal = document.getElementById('kVal');
+    let dampingVal = document.getElementById('dampingVal');
+    let displacementVal = document.getElementById('displacementVal');
+
+    let startBtn = document.getElementById('startBtn');
+    let resetBtn = document.getElementById('resetBtn');
+    let exportBtn = document.getElementById('exportBtn');
+
+    let mass, k, damping, initialDisplacement;
+    let y, velocity, acceleration;
+    let equilibriumY = canvas.height / 2;
+    let radius;
+    let simulating = false;
+    let time = 0;
+    const fps = 60;
+
+    let times = [], positions = [], velocities = [], kineticData = [], potentialData = [], totalEnergyData = [];
+
+    function drawSpring(topY, bottomY) {
+      let coils = 10;
+      let coilWidth = 30;
+      let coilHeight = (bottomY - topY) / coils;
+
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, topY);
+      for (let i = 1; i < coils; i++) {
+        let x = canvas.width / 2 + coilWidth * (i % 2 === 0 ? 1 : -1);
+        let y = topY + i * coilHeight;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(canvas.width / 2, bottomY);
+      ctx.strokeStyle = 'steelblue';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    function update(dt) {
+      let displacement = y - equilibriumY;
+      let springForce = -k * displacement;
+      let dampingForce = -damping * velocity;
+      let netForce = springForce + dampingForce;
+
+      acceleration = netForce / mass;
+      velocity += acceleration * dt;
+      y += velocity * dt;
+
+      const ke = 0.5 * mass * velocity * velocity;
+      const pe = 0.5 * k * displacement * displacement;
+
+      times.push(time.toFixed(2));
+      positions.push((y - equilibriumY).toFixed(2));
+      velocities.push(velocity.toFixed(2));
+      kineticData.push(ke);
+      potentialData.push(pe);
+      totalEnergyData.push(ke + pe);
+      time += dt;
+
+      if (energyChart) {
+        energyChart.data.labels = times;
+        energyChart.data.datasets[0].data = kineticData;
+        energyChart.data.datasets[1].data = potentialData;
+        energyChart.data.datasets[2].data = totalEnergyData;
+        energyChart.update();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let ceilingY = equilibriumY - 200;
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2 - 150, ceilingY);
+      ctx.lineTo(canvas.width / 2 + 150, ceilingY);
+      ctx.strokeStyle = 'black';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      drawSpring(ceilingY, y - radius);
+
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    }
+
+    function animate() {
+      if (simulating) {
+        update(1 / fps);
+      }
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    function setupChart() {
+      if (energyChart) energyChart.destroy();
+      energyChart = new Chart(chartCanvas, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Kinetic Energy (J)',
+              data: [],
+              borderColor: 'blue',
+              fill: false
+            },
+            {
+              label: 'Potential Energy (J)',
+              data: [],
+              borderColor: 'green',
+              fill: false
+            },
+            {
+              label: 'Total Energy (J)',
+              data: [],
+              borderColor: 'orange',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          animation: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Energy Graphs Over Time'
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Time (s)'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Energy (Joules)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    startBtn.addEventListener('click', () => {
+      mass = parseFloat(massSlider.value);
+      k = parseFloat(kSlider.value);
+      damping = parseFloat(dampingSlider.value);
+      initialDisplacement = parseFloat(displacementSlider.value);
+
+      y = canvas.height / 2 + initialDisplacement;
+      velocity = 0;
+      acceleration = 0;
+      radius = 20 + mass;
+      simulating = true;
+
+      time = 0;
+      times = [];
+      positions = [];
+      velocities = [];
+      kineticData = [];
+      potentialData = [];
+      totalEnergyData = [];
+      setupChart();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      simulating = false;
+      y = canvas.height / 2 + parseFloat(displacementSlider.value);
+      velocity = 0;
+      acceleration = 0;
+      time = 0;
+      draw();
+      if (energyChart) energyChart.destroy();
+    });
+
+    exportBtn.addEventListener('click', () => {
+      let csv = 'Time (s),Position (px),Velocity (px/s),Kinetic Energy (J),Potential Energy (J),Total Energy (J)\n';
+      for (let i = 0; i < times.length; i++) {
+        csv += `${times[i]},${positions[i]},${velocities[i]},${kineticData[i].toFixed(3)},${potentialData[i].toFixed(3)},${totalEnergyData[i].toFixed(3)}\n`;
+      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'spring_mass_data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    function updateSliderLabels() {
+      massVal.textContent = massSlider.value;
+      kVal.textContent = kSlider.value;
+      dampingVal.textContent = dampingSlider.value;
+      displacementVal.textContent = displacementSlider.value;
+    }
+
+    massSlider.oninput = updateSliderLabels;
+    kSlider.oninput = updateSliderLabels;
+    dampingSlider.oninput = updateSliderLabels;
+    displacementSlider.oninput = updateSliderLabels;
+
+    updateSliderLabels();
+    animate();
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Projectile Motion Simulation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f0f8ff;
+    }
+    canvas {
+      border: 1px solid #000;
+      background-color: #e0ffff;
+      margin-top: 10px;
+    }
+    .controls {
+      margin: 20px;
+    }
+    .controls input, .controls button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Projectile Motion Simulation</h1>
+  <div class="controls">
+    <label>Initial Velocity (m/s): <input type="number" id="v0" value="50" /></label>
+    <label>Angle (degrees): <input type="number" id="angle" value="45" /></label>
+    <label>Initial Height (m): <input type="number" id="h0" value="0" /></label><br />
+    <button onclick="startSimulation()">Start Simulation</button>
+    <button onclick="togglePause()">Pause/Resume</button>
+    <button onclick="resetSimulation()">Reset</button>
+  </div>
+  <canvas id="simulationCanvas" height="400"></canvas>
+  <p id="velocityComponents"></p>
+
+  <script>
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
+    const g = 9.81;
+    const dt = 0.02;
+    const scale = 5; // 1 meter = 5 pixels
+    const padding = 50; // for right space
+
+    let animationId;
+    let isPaused = false;
+    let path = [];
+    let vx, vy, x, y;
+    let groundY = canvas.height - 20;
+
+    function startSimulation() {
+      cancelAnimationFrame(animationId);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      path = [];
+
+      const v0 = parseFloat(document.getElementById('v0').value);
+      const angleDeg = parseFloat(document.getElementById('angle').value);
+      const h0 = parseFloat(document.getElementById('h0').value);
+      const angleRad = angleDeg * Math.PI / 180;
+
+      // Calculate velocity components
+      vx = v0 * Math.cos(angleRad);
+      vy = v0 * Math.sin(angleRad);
+      x = 0;
+      y = h0;
+      isPaused = false;
+
+      // Estimate time of flight and max range for resizing canvas
+      const timeToLand = (vy + Math.sqrt(vy * vy + 2 * g * h0)) / g;
+      const maxRange = vx * timeToLand;
+      canvas.width = maxRange * scale + padding;
+
+      draw();
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      if (!isPaused) {
+        draw();
+      }
+    }
+
+    function resetSimulation() {
+      cancelAnimationFrame(animationId);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      path = [];
+      document.getElementById('velocityComponents').textContent = '';
+    }
+
+    function drawGround() {
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(canvas.width, groundY);
+      ctx.strokeStyle = '#000';
+      ctx.stroke();
+    }
+
+    function draw() {
+      if (isPaused) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Save trail
+      path.push({ x: x * scale, y: groundY - y * scale });
+
+      // Draw trail
+      ctx.beginPath();
+      ctx.strokeStyle = 'blue';
+      for (let i = 0; i < path.length - 1; i++) {
+        ctx.moveTo(path[i].x, path[i].y);
+        ctx.lineTo(path[i + 1].x, path[i + 1].y);
+      }
+      ctx.stroke();
+
+      drawGround();
+
+      // Draw ball
+      const drawX = x * scale;
+      const drawY = groundY - y * scale;
+
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, 6, 0, 2 * Math.PI);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+
+      // Velocity display
+      document.getElementById('velocityComponents').textContent =
+        `Vx: ${vx.toFixed(2)} m/s, Vy: ${vy.toFixed(2)} m/s`;
+
+      // Physics update
+      x += vx * dt;
+      y += vy * dt;
+      vy -= g * dt;
+
+      if (y >= 0) {
+        animationId = requestAnimationFrame(draw);
+      } else {
+        // Clamp to ground
+        y = 0;
+        const finalY = groundY - y * scale;
+        ctx.beginPath();
+        ctx.arc(drawX, finalY, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+      }
+    }
+  </script>
+</body>
+</html>

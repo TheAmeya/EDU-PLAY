@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inclined Plane Simulation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      text-align: center;
+      background-color: #f7f7f7;
+    }
+    canvas {
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      margin: 20px auto;
+      display: block;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .controls label {
+      display: flex;
+      flex-direction: column;
+      font-size: 14px;
+    }
+    .controls input[type="range"] {
+      width: 150px;
+    }
+    .controls span {
+      font-weight: bold;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Rolling Ball on Inclined Plane</h1>
+  <div class="controls">
+    <label>Angle (°): 
+      <input type="range" id="angleSlider" min="0" max="45" value="30" step="0.1">
+      <span id="angleVal">30</span>
+    </label>
+    <label>Mass (kg): 
+      <input type="range" id="massSlider" min="0.1" max="10" value="1" step="0.1">
+      <span id="massVal">1</span>
+    </label>
+    <label>Friction: 
+      <input type="range" id="frictionSlider" min="0" max="1" value="0.1" step="0.01">
+      <span id="frictionVal">0.1</span>
+    </label>
+    <label>Plane Length (m): 
+      <input type="range" id="lengthSlider" min="1" max="10" value="5" step="0.1">
+      <span id="lengthVal">5</span>
+    </label>
+    <button onclick="startSimulation()">Start</button>
+    <button onclick="resetSimulation()">Reset</button>
+    <button onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <canvas id="simCanvas" width="1000" height="500"></canvas>
+  <canvas id="chartCanvas" width="600" height="300"></canvas>
+  <canvas id="energyCanvas" width="600" height="300"></canvas>
+
+  <audio id="rollSound" src="https://actions.google.com/sounds/v1/transportation/rolling.ogg"></audio>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const G = 9.81;
+    const fps = 60;
+    let time = 0;
+    let simRunning = false;
+    let animationId = null;
+
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const chartCanvas = document.getElementById('chartCanvas');
+    const energyCanvas = document.getElementById('energyCanvas');
+    let positionChart, energyChart;
+
+    const rollSound = document.getElementById('rollSound');
+
+    const angleSlider = document.getElementById('angleSlider');
+    const massSlider = document.getElementById('massSlider');
+    const frictionSlider = document.getElementById('frictionSlider');
+    const lengthSlider = document.getElementById('lengthSlider');
+
+    const angleVal = document.getElementById('angleVal');
+    const massVal = document.getElementById('massVal');
+    const frictionVal = document.getElementById('frictionVal');
+    const lengthVal = document.getElementById('lengthVal');
+
+    [angleSlider, massSlider, frictionSlider, lengthSlider].forEach(slider => {
+      slider.addEventListener('input', updateSliderValues);
+    });
+
+    function updateSliderValues() {
+      angleVal.textContent = angleSlider.value;
+      massVal.textContent = massSlider.value;
+      frictionVal.textContent = frictionSlider.value;
+      lengthVal.textContent = lengthSlider.value;
+    }
+
+    updateSliderValues();
+
+    function calculateAcceleration(angle, friction) {
+      const rad = angle * Math.PI / 180;
+      const inertiaFactor = 2 / 5;
+      const num = Math.sin(rad) - friction * Math.cos(rad);
+      const denom = 1 + inertiaFactor;
+      return Math.max(0, G * num / denom);
+    }
+
+    let csvData = [];
+
+    function startSimulation() {
+      const angle = parseFloat(angleSlider.value);
+      const mass = parseFloat(massSlider.value);
+      const friction = parseFloat(frictionSlider.value);
+      const length = parseFloat(lengthSlider.value);
+
+      const acceleration = calculateAcceleration(angle, friction);
+      if (acceleration === 0) {
+        alert("Ball won't move with these parameters.");
+        return;
+      }
+
+      const totalTime = Math.sqrt(2 * length / acceleration);
+      const timePoints = [];
+      const positions = [];
+      const velocities = [];
+      const kineticEnergies = [];
+      const potentialEnergies = [];
+
+      for (let t = 0; t <= totalTime; t += 1 / fps) {
+        const pos = 0.5 * acceleration * t * t;
+        const vel = acceleration * t;
+        const height = pos * Math.sin(angle * Math.PI / 180);
+        const KE = 0.5 * mass * vel * vel;
+        const PE = mass * G * (length * Math.sin(angle * Math.PI / 180) - height);
+
+        timePoints.push(t);
+        positions.push(pos);
+        velocities.push(vel);
+        kineticEnergies.push(KE);
+        potentialEnergies.push(PE);
+
+        csvData.push([t.toFixed(2), pos.toFixed(2), vel.toFixed(2)]);
+      }
+
+      if (positionChart) positionChart.destroy();
+      positionChart = new Chart(chartCanvas, {
+        type: 'line',
+        data: {
+          labels: timePoints,
+          datasets: [
+            {
+              label: 'Position (m)',
+              data: positions,
+              borderColor: 'blue',
+              fill: false
+            },
+            {
+              label: 'Velocity (m/s)',
+              data: velocities,
+              borderColor: 'red',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          plugins: {
+            title: { display: true, text: 'Position & Velocity vs Time' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Value' } }
+          }
+        }
+      });
+
+      if (energyChart) energyChart.destroy();
+      energyChart = new Chart(energyCanvas, {
+        type: 'line',
+        data: {
+          labels: timePoints,
+          datasets: [
+            {
+              label: 'Kinetic Energy (J)',
+              data: kineticEnergies,
+              borderColor: 'green',
+              fill: false
+            },
+            {
+              label: 'Potential Energy (J)',
+              data: potentialEnergies,
+              borderColor: 'orange',
+              fill: false
+            }
+          ]
+        },
+        options: {
+          plugins: {
+            title: { display: true, text: 'Kinetic & Potential Energy vs Time' }
+          },
+          scales: {
+            x: { title: { display: true, text: 'Time (s)' } },
+            y: { title: { display: true, text: 'Energy (J)' } }
+          }
+        }
+      });
+
+      time = 0;
+      simRunning = true;
+      rollSound.play();
+
+      const startX = 100, startY = 100;
+      const lengthPx = 600;
+      const rad = angle * Math.PI / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const pxPerMeter = lengthPx / length;
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const endX = startX + lengthPx * cos;
+        const endY = startY + lengthPx * sin;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'black';
+        ctx.stroke();
+
+        let ballPos = 0.5 * acceleration * time * time;
+        if (ballPos > length) ballPos = length;
+        const ballX = startX + ballPos * pxPerMeter * cos;
+        const ballY = startY + ballPos * pxPerMeter * sin;
+
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, 10 + mass * 2, 0, Math.PI * 2);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+
+        ctx.fillStyle = 'black';
+        ctx.font = '16px Arial';
+        ctx.fillText(`Time: ${time.toFixed(2)} s`, 800, 30);
+        ctx.fillText(`Position: ${ballPos.toFixed(2)} m`, 800, 50);
+
+        time += 1 / fps;
+        if (ballPos < length) {
+          animationId = requestAnimationFrame(animate);
+        } else {
+          simRunning = false;
+          rollSound.pause();
+          rollSound.currentTime = 0;
+        }
+      }
+
+      cancelAnimationFrame(animationId);
+      animate();
+    }
+
+    function resetSimulation() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (positionChart) {
+        positionChart.destroy();
+        positionChart = null;
+      }
+      if (energyChart) {
+        energyChart.destroy();
+        energyChart = null;
+      }
+      cancelAnimationFrame(animationId);
+      simRunning = false;
+      time = 0;
+      rollSound.pause();
+      rollSound.currentTime = 0;
+      csvData = [];
+    }
+
+    function exportCSV() {
+      if (csvData.length === 0) return;
+      let csvContent = "Time (s),Position (m),Velocity (m/s)\n" + csvData.map(row => row.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'simulation_data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

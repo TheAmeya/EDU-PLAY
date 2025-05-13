@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ultimate Area Arena</title>
+    <style>
+        :root {
+            --math-bg: #1a1c28;
+            --primary: #6c5ce7;
+            --accent: #ff7675;
+            --text: #f8f9fa;
+        }
+
+        body {
+            background: var(--math-bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .problem-container {
+            background: #2d2f3d;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(108, 92, 231, 0.3);
+            position: relative;
+        }
+
+        .problem-text {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            min-height: 80px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem 0;
+        }
+
+        input {
+            background: #3a3b4a;
+            border: 2px solid var(--primary);
+            color: var(--text);
+            padding: 1rem;
+            width: 200px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--text);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .timer-bar {
+            height: 5px;
+            background: var(--accent);
+            width: 100%;
+            border-radius: 3px;
+            transition: width 1s linear;
+        }
+
+        .feedback {
+            position: absolute;
+            right: 2rem;
+            top: 2rem;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Ultimate Area Arena 📐</h1>
+        
+        <div class="stats">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">❤️❤️❤️</span></div>
+            <div>Time: <span id="timer">30</span>s</div>
+        </div>
+
+        <div class="problem-container">
+            <div class="problem-text" id="problem"></div>
+            <div class="input-group">
+                <input type="number" id="answer" placeholder="Enter area">
+                <button id="submitBtn">Submit</button>
+            </div>
+            <div class="timer-bar" id="timerBar"></div>
+            <div class="feedback" id="feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        class AreaGame {
+            constructor() {
+                this.score = 0;
+                this.lives = 3;
+                this.timeLeft = 30;
+                this.currentProblem = null;
+                this.timerId = null;
+                
+                this.problemTypes = [
+                    {
+                        name: 'circle',
+                        question: (r) => `Circle with radius ${r}`,
+                        solution: (r) => Math.PI * r * r,
+                        params: () => [Math.floor(Math.random() * 15 + 3)]
+                    },
+                    {
+                        name: 'triangle',
+                        question: (b,h) => `Triangle (base=${b}, height=${h})`,
+                        solution: (b,h) => 0.5 * b * h,
+                        params: () => [Math.floor(Math.random() * 12 + 3), Math.floor(Math.random() * 10 + 5)]
+                    },
+                    {
+                        name: 'rectangle',
+                        question: (l,w) => `Rectangle (length=${l}, width=${w})`,
+                        solution: (l,w) => l * w,
+                        params: () => [Math.floor(Math.random() * 15 + 5), Math.floor(Math.random() * 10 + 3)]
+                    },
+                    {
+                        name: 'trapezoid',
+                        question: (a,b,h) => `Trapezoid (bases ${a} & ${b}, height ${h})`,
+                        solution: (a,b,h) => 0.5 * (a + b) * h,
+                        params: () => [Math.floor(Math.random() * 10 + 5), Math.floor(Math.random() * 10 + 5), Math.floor(Math.random() * 8 + 4)]
+                    },
+                    {
+                        name: 'parallelogram',
+                        question: (b,h) => `Parallelogram (base=${b}, height=${h})`,
+                        solution: (b,h) => b * h,
+                        params: () => [Math.floor(Math.random() * 12 + 4), Math.floor(Math.random() * 10 + 4)]
+                    },
+                    {
+                        name: 'rhombus',
+                        question: (d1,d2) => `Rhombus with diagonals ${d1} & ${d2}`,
+                        solution: (d1,d2) => (d1 * d2)/2,
+                        params: () => [Math.floor(Math.random() * 15 + 5), Math.floor(Math.random() * 12 + 6)]
+                    },
+                    {
+                        name: 'sector',
+                        question: (r,θ) => `Sector with radius ${r} (angle=${θ}°)`,
+                        solution: (r,θ) => (θ/360) * Math.PI * r * r,
+                        params: () => [Math.floor(Math.random() * 10 + 4), Math.floor(Math.random() * 330 + 30)]
+                    },
+                    {
+                        name: 'ellipse',
+                        question: (a,b) => `Ellipse (major axis ${a}, minor axis ${b})`,
+                        solution: (a,b) => Math.PI * a * b,
+                        params: () => [Math.floor(Math.random() * 12 + 6), Math.floor(Math.random() * 10 + 3)]
+                    },
+                    {
+                        name: 'annulus',
+                        question: (r1,r2) => `Annulus (inner radius ${r1}, outer ${r2})`,
+                        solution: (r1,r2) => Math.PI * (r2*r2 - r1*r1),
+                        params: () => [Math.floor(Math.random() * 5 + 2), Math.floor(Math.random() * 10 + 6)]
+                    },
+                    {
+                        name: 'hexagon',
+                        question: (s) => `Regular hexagon with side ${s}`,
+                        solution: (s) => (3 * Math.sqrt(3)/2) * s * s,
+                        params: () => [Math.floor(Math.random() * 8 + 3)]
+                    },
+                    {
+                        name: 'kite',
+                        question: (d1,d2) => `Kite with diagonals ${d1} & ${d2}`,
+                        solution: (d1,d2) => (d1 * d2)/2,
+                        params: () => [Math.floor(Math.random() * 15 + 5), Math.floor(Math.random() * 12 + 6)]
+                    },
+                    {
+                        name: 'pentagon',
+                        question: (s) => `Regular pentagon with side ${s}`,
+                        solution: (s) => (5/4) * s * s * (1 / Math.tan(Math.PI/5)),
+                        params: () => [Math.floor(Math.random() * 10 + 3)]
+                    },
+                    {
+                        name: 'semicircle',
+                        question: (r) => `Semicircle with radius ${r}`,
+                        solution: (r) => (Math.PI * r * r)/2,
+                        params: () => [Math.floor(Math.random() * 15 + 3)]
+                    },
+                    {
+                        name: 'octagon',
+                        question: (s) => `Regular octagon with side ${s}`,
+                        solution: (s) => 2 * (1 + Math.sqrt(2)) * s * s,
+                        params: () => [Math.floor(Math.random() * 8 + 3)]
+                    }
+                ];
+
+                this.init();
+            }
+
+            init() {
+                this.generateNewProblem();
+                document.getElementById('submitBtn').addEventListener('click', () => this.checkAnswer());
+                document.getElementById('answer').addEventListener('keypress', (e) => {
+                    if(e.key === 'Enter') this.checkAnswer();
+                });
+            }
+
+            generateNewProblem() {
+                const problem = this.problemTypes[Math.floor(Math.random() * this.problemTypes.length)];
+                const params = problem.params();
+                
+                this.currentProblem = {
+                    text: problem.question(...params),
+                    solution: problem.solution(...params)
+                };
+
+                document.getElementById('problem').textContent = this.currentProblem.text;
+                this.startTimer();
+            }
+
+            startTimer() {
+                this.timeLeft = 30;
+                document.getElementById('timerBar').style.width = '100%';
+                document.getElementById('timer').textContent = this.timeLeft;
+                
+                if(this.timerId) clearInterval(this.timerId);
+                this.timerId = setInterval(() => this.updateTimer(), 1000);
+            }
+
+            updateTimer() {
+                this.timeLeft--;
+                document.getElementById('timer').textContent = this.timeLeft;
+                document.getElementById('timerBar').style.width = 
+                    `${(this.timeLeft/30)*100}%`;
+
+                if(this.timeLeft <= 0) this.handleTimeout();
+            }
+
+            checkAnswer() {
+                const userAnswer = parseFloat(document.getElementById('answer').value);
+                const correct = Math.abs(userAnswer - this.currentProblem.solution) < 0.01;
+                
+                if(correct) {
+                    this.handleCorrectAnswer();
+                } else {
+                    this.handleWrongAnswer();
+                }
+                
+                document.getElementById('answer').value = '';
+                this.updateDisplay();
+            }
+
+            handleCorrectAnswer() {
+                this.score += 100;
+                this.showFeedback('Correct! +100', '#6c5ce7');
+                this.generateNewProblem();
+            }
+
+            handleWrongAnswer() {
+                this.lives--;
+                this.showFeedback('Wrong! -1 Life', '#ff7675');
+                if(this.lives > 0) this.generateNewProblem();
+                else this.gameOver();
+            }
+
+            handleTimeout() {
+                this.lives--;
+                this.showFeedback('Time Out! -1 Life', '#ff7675');
+                if(this.lives > 0) {
+                    this.generateNewProblem();
+                } else {
+                    this.gameOver();
+                }
+                this.updateDisplay();
+            }
+
+            gameOver() {
+                clearInterval(this.timerId);
+                alert(`Game Over! Final Score: ${this.score}`);
+                this.resetGame();
+            }
+
+            resetGame() {
+                this.score = 0;
+                this.lives = 3;
+                this.timeLeft = 30;
+                this.updateDisplay();
+                this.generateNewProblem();
+            }
+
+            updateDisplay() {
+                document.getElementById('score').textContent = this.score;
+                document.getElementById('lives').textContent = '❤️'.repeat(this.lives);
+            }
+
+            showFeedback(text, color) {
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = text;
+                feedback.style.color = color;
+                feedback.style.opacity = '1';
+                
+                setTimeout(() => {
+                    feedback.style.opacity = '0';
+                }, 1000);
+            }
+        }
+
+        new AreaGame();
+    </script>
+</body>
+</html>

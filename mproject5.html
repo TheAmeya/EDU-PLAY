@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraction Balance Challenge</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+
+        .scale-container {
+            position: relative;
+            height: 300px;
+            margin: 2rem 0;
+        }
+
+        .beam {
+            position: absolute;
+            width: 80%;
+            height: 8px;
+            background: var(--dark);
+            left: 10%;
+            top: 50%;
+            transform-origin: center;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 4px;
+        }
+
+        .side {
+            position: absolute;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        #leftSide {
+            right: 55%;
+        }
+
+        #rightSide {
+            left: 55%;
+        }
+
+        .block {
+            background: var(--secondary);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            min-width: 60px;
+            transition: transform 0.3s ease;
+        }
+
+        .block.missing {
+            background: var(--accent);
+            cursor: pointer;
+            animation: pulse 1.5s infinite;
+        }
+
+        .stand {
+            position: absolute;
+            width: 10px;
+            height: 100%;
+            background: var(--dark);
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 5px;
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        input {
+            padding: 15px;
+            font-size: 1.2rem;
+            width: 120px;
+            margin: 10px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+            color: var(--dark);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .feedback {
+            font-size: 1.2rem;
+            margin-top: 15px;
+            min-height: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Fraction Balance Challenge ⚖️</h1>
+        <div class="score-board">
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">❤️❤️❤️</span></div>
+        </div>
+        
+        <div class="scale-container">
+            <div class="stand"></div>
+            <div class="beam" id="beam">
+                <div class="side" id="leftSide"></div>
+                <div class="side" id="rightSide"></div>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        <div class="controls">
+            <input type="text" id="answer" placeholder="Enter a/b">
+            <button onclick="checkAnswer()">Check</button>
+        </div>
+    </div>
+
+    <script>
+        let currentProblem = null;
+        let score = 0;
+        let lives = 3;
+
+        function getSubscriptNumber(n) {
+            const subscriptDigits = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+            return n.toString().split('').map(d => subscriptDigits[parseInt(d)]).join('');
+        }
+
+        function toFraction(value) {
+            const tolerance = 1.0E-6;
+            for(let d = 1; d <= 12; d++){
+                const n = Math.round(value * d);
+                if(Math.abs(value - n/d) < tolerance) {
+                    return d === 1 ? `${n}` : `${n}/${d}`;
+                }
+            }
+            return value.toFixed(2);
+        }
+
+        function generateFractionEquation(variable) {
+            const denominator = Math.floor(Math.random() * 6 + 2);
+            const numerator = Math.floor(Math.random() * (denominator * 2 - 1)) - denominator + 1;
+            const solution = numerator / denominator;
+            
+            const a = Math.floor(Math.random() * 3 + 2);
+            const b = Math.floor(Math.random() * 5 + 1);
+            const c = a * solution + b;
+            
+            return {
+                equation: `${a}${variable} + ${b} = ${toFraction(c)}`,
+                solution: solution,
+                variable: variable
+            };
+        }
+
+        function generateProblem() {
+            let variableIndex = 1;
+            const sides = [
+                { blocks: 3, equations: [], total: 0 },
+                { blocks: 2, equations: [], total: 0 }
+            ];
+
+            const missingSide = Math.random() < 0.5 ? 0 : 1;
+
+            sides.forEach((side, index) => {
+                const visibleBlocks = side.blocks - (index === missingSide ? 1 : 0);
+                for(let i = 0; i < visibleBlocks; i++) {
+                    const variable = `x${getSubscriptNumber(variableIndex)}`;
+                    const eq = generateFractionEquation(variable);
+                    side.equations.push(eq);
+                    side.total += eq.solution;
+                    variableIndex++;
+                }
+            });
+
+            const missingValue = Math.abs(sides[0].total - sides[1].total);
+            currentProblem = {
+                sides,
+                missingSide,
+                missingValue,
+                missingFraction: toFraction(missingValue),
+                variablesUsed: variableIndex - 1
+            };
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const leftSide = document.getElementById('leftSide');
+            const rightSide = document.getElementById('rightSide');
+            
+            [leftSide, rightSide].forEach((container, index) => {
+                container.innerHTML = '';
+                const side = currentProblem.sides[index];
+                const isMissingSide = index === currentProblem.missingSide;
+
+                side.equations.forEach(eq => {
+                    const block = document.createElement('div');
+                    block.className = 'block';
+                    block.textContent = eq.equation;
+                    container.appendChild(block);
+                });
+
+                if(isMissingSide) {
+                    const missingBlock = document.createElement('div');
+                    missingBlock.className = 'block missing';
+                    missingBlock.textContent = '?';
+                    container.appendChild(missingBlock);
+                }
+            });
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = '❤️'.repeat(lives);
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('answer').value = '';
+        }
+
+        function checkAnswer() {
+            const answerInput = document.getElementById('answer').value.trim();
+            const feedback = document.getElementById('feedback');
+            
+            // Handle fraction parsing
+            let parts = answerInput.split('/');
+            let num, den;
+            if (parts.length === 1) {
+                // Handle whole numbers
+                num = Number(parts[0]);
+                den = 1;
+            } else if (parts.length === 2) {
+                num = Number(parts[0]);
+                den = Number(parts[1]);
+            } else {
+                feedback.textContent = "⚠️ Invalid format (use a/b)";
+                feedback.style.color = 'var(--accent)';
+                return;
+            }
+
+            // Validate input
+            if (isNaN(num) || isNaN(den) || den === 0) {
+                feedback.textContent = "⚠️ Please enter a valid fraction (e.g. 3/4)";
+                feedback.style.color = 'var(--accent)';
+                return;
+            }
+
+            const answerValue = num / den;
+            const error = Math.abs(answerValue - currentProblem.missingValue);
+            const beam = document.getElementById('beam');
+
+            if(error < 0.01) {
+                score += 15;
+                feedback.textContent = "🎉 Correct! Perfect balance!";
+                feedback.style.color = 'var(--secondary)';
+                beam.style.transform = 'rotate(0deg)';
+                generateProblem();
+            } else {
+                lives--;
+                feedback.textContent = `❌ Needed: ${currentProblem.missingFraction}`;
+                feedback.style.color = 'var(--accent)';
+                const tilt = (5 - lives) * 3 * (answerValue < currentProblem.missingValue ? 1 : -1);
+                beam.style.transform = `rotate(${tilt}deg)`;
+                
+                if(lives <= 0) {
+                    setTimeout(() => {
+                        alert(`Game Over! Final Score: ${score}`);
+                        resetGame();
+                    }, 100);
+                }
+            }
+
+            updateDisplay();
+        }
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            generateProblem();
+        }
+
+        // Initialize game
+        generateProblem();
+
+        // Allow pressing Enter to submit answer
+        document.getElementById('answer').addEventListener('keypress', function(e) {
+            if(e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+    </script>
+</body>
+</html>

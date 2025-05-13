@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pendulum Lab</title>
+  <style>
+    body {
+      background-color: #d0e0f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    .contro-panel {
+      background: #f0f0f0;
+      padding: 20px;
+      border: solid 1px #aaa;
+      margin-bottom: 20px;
+    }
+    .label {
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    canvas {
+      background: #ffffff;
+      border: 1px solid #000;
+    }
+    button {
+      background-color: #ff4500;
+      color: white;
+      font-weight: bold;
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 15px;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #cc3700;
+    }
+    input[type="number"], input[type="range"] {
+      width: 60%;
+    }
+    #timeTable {
+      margin-top: 10px;
+      white-space: pre;
+      background: #f0f0f0;
+      border: solid 1px #aaa;
+      padding: 10px;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pendulum Lab</h1>
+  <div class="control-panel">
+    <div class="label">Gravity (m/s²)</div>
+    <input type="range" min="1" max="20" step="0.1" id="gravitySlider" />
+    <div class="label">Initial Angle (degrees)</div>
+    <input type="range" min="0" max="90" step="1" id="angleSlider" />
+    <div class="label">Mass (kg)</div>
+    <input type="range" min="0.5" max="10" step="0.1" id="massSlider" />
+    <div class="label">Length of Pendulum (m)</div>
+    <input type="number" id="lengthInput" value="1.0" />
+    <button onclick="updateLength()">Update Length</button>
+    <div id="timePeriodLabel" style="margin-top: 15px;">Time Period: </div>
+    <div style="font-weight: bold; margin-top: 10px;">Formula: T = 2π√(L/g)</div>
+    <div id="timeTable"></div>
+    <br/>
+    <button onclick="startSimulation()">Start Simulation</button>
+  </div>
+
+  <canvas id="pendulumCanvas" width="500" height="500"></canvas>
+
+  <script>
+    let g = 9.81, L = 1.0, angleDeg = 30, damping = 0.01, mass = 1.0;
+    let angleRad = angleDeg * Math.PI / 180;
+    const canvas = document.getElementById('pendulumCanvas');
+    const ctx = canvas.getContext('2d');
+    let omega = 0, time = 0;
+    let animationId;
+
+    const originX = canvas.width / 2;
+    const originY = 100;
+    let scale = 100; // will be dynamically adjusted based on L
+
+    document.getElementById('gravitySlider').value = g;
+    document.getElementById('angleSlider').value = angleDeg;
+    document.getElementById('massSlider').value = mass;
+
+    document.getElementById('gravitySlider').oninput = (e) => {
+      g = parseFloat(e.target.value);
+      updateTimePeriod();
+    };
+    document.getElementById('angleSlider').oninput = (e) => {
+      angleDeg = parseFloat(e.target.value);
+      angleRad = angleDeg * Math.PI / 180;
+    };
+    document.getElementById('massSlider').oninput = (e) => {
+      mass = parseFloat(e.target.value);
+      updateTimePeriod();
+    };
+
+    function updateLength() {
+      const val = parseFloat(document.getElementById('lengthInput').value);
+      if (!isNaN(val) && val > 0) {
+        L = val;
+        updateTimePeriod();
+        // Dynamically scale to fit
+        scale = Math.min((canvas.height - originY - 50) / L, 120);  // prevent overflows
+      }
+    }
+
+    function updateTimePeriod() {
+      const T = 2 * Math.PI * Math.sqrt(L / g);
+      document.getElementById('timePeriodLabel').innerText = `Time Period: ${T.toFixed(2)} s`;
+      document.getElementById('timeTable').innerText =
+        `Length (m) | Time Period (s)\n-------------------------\n${L.toFixed(2)}        | ${T.toFixed(2)}`;
+    }
+
+    function simulatePendulumStep(dt) {
+      const alpha = -(g / L) * Math.sin(angleRad) - damping * omega;
+      omega += alpha * dt;
+      angleRad += omega * dt;
+    }
+
+    function drawPendulum() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const x = originX + L * scale * Math.sin(angleRad);
+      const y = originY + L * scale * Math.cos(angleRad);
+
+      ctx.beginPath();
+      ctx.moveTo(originX, originY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x, y, 10, 0, 2 * Math.PI);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+
+      ctx.font = '16px Arial';
+      ctx.fillStyle = 'black';
+      ctx.fillText(`Time: ${time.toFixed(2)} s`, 20, 30);
+    }
+
+    function animate() {
+      const dt = 0.025;  // slowed down step
+      simulatePendulumStep(dt);
+      drawPendulum();
+      time += dt;
+      animationId = requestAnimationFrame(animate);
+    }
+
+    function startSimulation() {
+      cancelAnimationFrame(animationId);
+      angleRad = angleDeg * Math.PI / 180;
+      omega = 0;
+      time = 0;
+      updateLength();
+      drawPendulum();
+      animate();
+    }
+
+    updateTimePeriod();
+    updateLength();
+    drawPendulum();
+  </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faraday's Law Simulation</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+    }
+    #ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      padding: 10px;
+      color: black;
+      background-color: rgba(255, 255, 255, 0.8);
+      font-size: 1.2em;
+    }
+    .slider {
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="simCanvas"></canvas>
+  <div id="ui">
+    <label>Magnet Strength (T): <span id="magStrengthVal">1.0</span></label><br/>
+    <input type="range" id="magStrength" class="slider" min="0.1" max="3" step="0.1" value="1" /><br/><br/>
+
+    <label>Coil Turns: <span id="coilTurnsVal">10</span></label><br/>
+    <input type="range" id="coilTurns" class="slider" min="1" max="20" step="1" value="10" /><br/><br/>
+
+    <p>Instructions:</p>
+    <ol>
+      <li>Drag the magnet with your mouse</li>
+      <li>Watch the induced current (red/blue meter)</li>
+      <li>Adjust magnet strength and coil turns with sliders</li>
+      <li>Observe the magnetic flux graph (top-right)</li>
+    </ol>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+
+    let magnet = {
+      x: width / 2,
+      y: height / 2,
+      width: Math.max(40, width / 30),
+      height: Math.max(80, height / 10),
+      strength: 1.0,
+      dragging: false,
+    };
+
+    let coil = {
+      x: width / 2,
+      y: height / 2,
+      radius: Math.min(width, height) / 4,
+      turns: 10,
+      current: 0,
+      fluxHistory: [],
+      maxHistory: 100,
+    };
+
+    const magStrengthInput = document.getElementById('magStrength');
+    const magStrengthVal = document.getElementById('magStrengthVal');
+    magStrengthInput.oninput = () => {
+      magnet.strength = parseFloat(magStrengthInput.value);
+      magStrengthVal.textContent = magnet.strength.toFixed(1);
+    };
+
+    const coilTurnsInput = document.getElementById('coilTurns');
+    const coilTurnsVal = document.getElementById('coilTurnsVal');
+    coilTurnsInput.oninput = () => {
+      coil.turns = parseInt(coilTurnsInput.value);
+      coilTurnsVal.textContent = coil.turns;
+    };
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.offsetX >= magnet.x - magnet.width / 2 && e.offsetX <= magnet.x + magnet.width / 2 &&
+          e.offsetY >= magnet.y - magnet.height / 2 && e.offsetY <= magnet.y + magnet.height / 2) {
+        magnet.dragging = true;
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => magnet.dragging = false);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (magnet.dragging) {
+        magnet.x = e.offsetX;
+        magnet.y = e.offsetY;
+      }
+    });
+
+    function updateFlux() {
+      let dx = magnet.x - coil.x;
+      let dy = magnet.y - coil.y;
+      let distance = Math.sqrt(dx * dx + dy * dy);
+      let alignment = distance > 0 ? Math.abs(dy) / distance : 0;
+      let flux = (distance > coil.radius / 2)
+        ? magnet.strength * (coil.radius / distance) * alignment
+        : magnet.strength;
+
+      coil.fluxHistory.push(flux);
+      if (coil.fluxHistory.length > coil.maxHistory)
+        coil.fluxHistory.shift();
+
+      if (coil.fluxHistory.length > 1) {
+        let fluxChange = coil.fluxHistory[coil.fluxHistory.length - 1] - coil.fluxHistory[coil.fluxHistory.length - 2];
+        coil.current = -fluxChange * coil.turns;
+      } else {
+        coil.current = 0;
+      }
+
+      coil.current = Math.max(-5, Math.min(5, coil.current));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, width, height);
+
+      // Coil
+      ctx.strokeStyle = '#333';
+      for (let i = 0; i < coil.turns; i++) {
+        ctx.beginPath();
+        ctx.arc(coil.x, coil.y, coil.radius - i * (coil.radius * 0.7 / coil.turns), 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
+      // Current Meter
+      let currentHeight = Math.abs(coil.current) * (height / 20);
+      let currentColor = coil.current > 0 ? 'red' : 'blue';
+      ctx.fillStyle = 'white';
+      ctx.fillRect(coil.x + coil.radius + 30, coil.y - height / 8, 20, height / 4);
+      ctx.strokeStyle = 'black';
+      ctx.strokeRect(coil.x + coil.radius + 30, coil.y - height / 8, 20, height / 4);
+      ctx.fillStyle = currentColor;
+      ctx.fillRect(coil.x + coil.radius + 30, coil.y - currentHeight / 2, 20, currentHeight);
+
+      // Flux Graph - moved to top-right
+      const gx = width - width / 4, gy = height / 20, gw = width / 4, gh = height / 6;
+      ctx.fillStyle = 'white';
+      ctx.fillRect(gx, gy, gw, gh);
+      ctx.strokeStyle = 'black';
+      ctx.strokeRect(gx, gy, gw, gh);
+      ctx.beginPath();
+      ctx.moveTo(gx, gy + gh / 2);
+      ctx.lineTo(gx + gw, gy + gh / 2);
+      ctx.moveTo(gx + gw / 2, gy);
+      ctx.lineTo(gx + gw / 2, gy + gh);
+      ctx.stroke();
+
+      if (coil.fluxHistory.length > 1) {
+        ctx.strokeStyle = 'blue';
+        ctx.beginPath();
+        for (let i = 0; i < coil.fluxHistory.length; i++) {
+          let x = gx + (i / (coil.maxHistory - 1)) * gw;
+          let y = gy + gh / 2 - (coil.fluxHistory[i] * gh / 4);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // Magnet
+      ctx.fillStyle = 'gray';
+      ctx.fillRect(magnet.x - magnet.width / 2, magnet.y - magnet.height / 2, magnet.width, magnet.height);
+      ctx.fillStyle = 'red';
+      ctx.fillRect(magnet.x - magnet.width / 2, magnet.y - magnet.height / 2, magnet.width, magnet.height / 4);
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(magnet.x - magnet.width / 2, magnet.y + magnet.height / 2 - magnet.height / 4, magnet.width, magnet.height / 4);
+
+      requestAnimationFrame(loop);
+    }
+
+    function loop() {
+      updateFlux();
+      draw();
+    }
+
+    loop();
+  </script>
+</body>
+</html>

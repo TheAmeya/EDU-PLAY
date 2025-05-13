@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parents Score Overview</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white py-6 shadow-lg">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <h1 class="text-3xl font-bold">Parents Score Overview</h1>
+      <a href="allcode.html" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Home
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-12">
+    <section class="mb-12">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Game Scores & Performance</h2>
+      <p class="text-gray-600">Track your child's progress across different English and Math games.</p>
+    </section>
+
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <!-- English Games -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-spell-check mr-2 text-blue-600"></i> Spelling Bee</h3>
+        <p class="text-gray-700 mb-2">Latest: 85 | High Score: 95</p>
+        <canvas id="chartSpelling"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-book-open mr-2 text-blue-600"></i> Grammar Quest</h3>
+        <p class="text-gray-700 mb-2">Latest: 78 | High Score: 88</p>
+        <canvas id="chartGrammar"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-comment-dots mr-2 text-blue-600"></i> Vocabulary Builder</h3>
+        <p class="text-gray-700 mb-2">Latest: 92 | High Score: 99</p>
+        <canvas id="chartVocab"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-volume-up mr-2 text-blue-600"></i> Audio Challenge</h3>
+        <p class="text-gray-700 mb-2">Latest: 80 | High Score: 90</p>
+        <canvas id="chartAudio"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-chess-board mr-2 text-blue-600"></i> Board Game</h3>
+        <p class="text-gray-700 mb-2">Latest: 75 | High Score: 85</p>
+        <canvas id="chartBoard"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-font mr-2 text-blue-600"></i> Scrabble Showdown</h3>
+        <p class="text-gray-700 mb-2">Latest: 90 | High Score: 97</p>
+        <canvas id="chartScrabble"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-keyboard mr-2 text-blue-600"></i> Wordle Master</h3>
+        <p class="text-gray-700 mb-2">Latest: 82 | High Score: 92</p>
+        <canvas id="chartWordle"></canvas>
+      </div>
+
+      <!-- MATH GAMES -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-bolt mr-2 text-green-600"></i> Quick Math Challenge</h3>
+        <p class="text-gray-700 mb-2">Latest: 77 | High Score: 89</p>
+        <canvas id="chartQuickMath"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-draw-polygon mr-2 text-green-600"></i> Geometry Puzzle</h3>
+        <p class="text-gray-700 mb-2">Latest: 80 | High Score: 91</p>
+        <canvas id="chartGeometry"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-superscript mr-2 text-green-600"></i> Algebra Adventure</h3>
+        <p class="text-gray-700 mb-2">Latest: 74 | High Score: 88</p>
+        <canvas id="chartAlgebra"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-user-ninja mr-2 text-green-600"></i> Number Ninja</h3>
+        <p class="text-gray-700 mb-2">Latest: 81 | High Score: 90</p>
+        <canvas id="chartNinja"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-puzzle-piece mr-2 text-green-600"></i> Math Maze</h3>
+        <p class="text-gray-700 mb-2">Latest: 69 | High Score: 83</p>
+        <canvas id="chartMaze"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-2"><i class="fas fa-percent mr-2 text-green-600"></i> Fraction Frenzy</h3>
+        <p class="text-gray-700 mb-2">Latest: 76 | High Score: 87</p>
+        <canvas id="chartFraction"></canvas>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p>&copy; 2025 Educational Games Hub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Chart JS -->
+  <script>
+    function createChart(id, label, data) {
+      new Chart(document.getElementById(id), {
+        type: 'line',
+        data: {
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [{
+            label: label,
+            data: data,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            fill: true,
+            tension: 0.4,
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              suggestedMax: 100
+            }
+          }
+        }
+      });
+    }
+
+    // English Games
+    createChart('chartSpelling', 'Spelling Bee', [70, 85, 80, 90, 95, 85, 88]);
+    createChart('chartGrammar', 'Grammar Quest', [65, 78, 75, 82, 88, 80, 84]);
+    createChart('chartVocab', 'Vocabulary Builder', [80, 92, 85, 90, 99, 93, 95]);
+    createChart('chartAudio', 'Audio Challenge', [68, 80, 76, 82, 90, 84, 86]);
+    createChart('chartBoard', 'Board Game', [60, 75, 70, 78, 85, 80, 76]);
+    createChart('chartScrabble', 'Scrabble Showdown', [82, 90, 88, 94, 97, 92, 95]);
+    createChart('chartWordle', 'Wordle Master', [70, 82, 78, 85, 92, 88, 90]);
+
+    // Math Games
+    createChart('chartQuickMath', 'Quick Math Challenge', [65, 77, 70, 83, 89, 78, 85]);
+    createChart('chartGeometry', 'Geometry Puzzle', [72, 80, 75, 88, 91, 84, 87]);
+    createChart('chartAlgebra', 'Algebra Adventure', [60, 74, 70, 79, 88, 76, 81]);
+    createChart('chartNinja', 'Number Ninja', [68, 81, 75, 85, 90, 83, 86]);
+    createChart('chartMaze', 'Math Maze', [55, 69, 65, 74, 83, 70, 75]);
+    createChart('chartFraction', 'Fraction Frenzy', [66, 76, 70, 80, 87, 79, 84]);
+  </script>
+</body>
+</html>

@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Math Defender</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    #arena {
+      height: 600px;
+      width: 800px;
+      border: 3px solid #ffffff;
+      border-radius: 10px;
+      margin: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .math-problem {
+      background: #ffffff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      color: #1e3c72;
+      font-size: 32px;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    .timer-bar {
+      height: 5px;
+      background: #ff4444;
+      width: 100%;
+      animation: timer 60s linear forwards;
+    }
+    .catch-fire {
+      animation: fireEffect 1s forwards;
+    }
+    @keyframes timer {
+      from { width: 100%; }
+      to { width: 0; }
+    }
+    @keyframes fireEffect {
+      0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+      30% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
+      60% { transform: translate(-50%, -50%) scale(1.05) rotate(-5deg); }
+      100% { transform: translate(-50%, -50%) scale(0) rotate(90deg); }
+    }
+    #hud {
+      display: flex;
+      gap: 30px;
+      font-size: 24px;
+      margin: 20px;
+    }
+    input {
+      font-size: 24px;
+      padding: 10px;
+      width: 150px;
+      border-radius: 8px;
+      border: none;
+      margin: 20px;
+    }
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Math Defender 🛡️</h1>
+  <div id="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Lives: <span id="lives">❤️❤️❤️</span></div>
+  </div>
+  <div id="arena"></div>
+  <input type="number" id="answer" placeholder="Your answer" autofocus>
+  <button id="startGame" style="display:none;">Start Game</button>
+
+  <script>
+    class MathDefender {
+      constructor() {
+        this.score = 0;
+        this.lives = 3;
+        this.activeProblem = null;
+        this.answerInput = document.getElementById('answer');
+        this.scoreDisplay = document.getElementById('score');
+        this.livesDisplay = document.getElementById('lives');
+        this.arena = document.getElementById('arena');
+        
+        this.initializeGame();
+        this.createProblem();
+      }
+
+      initializeGame() {
+        this.answerInput.disabled = false;
+        this.scoreDisplay.textContent = this.score;
+        this.livesDisplay.innerHTML = '❤️❤️❤️';
+        this.arena.innerHTML = '';
+        this.answerInput.value = '';
+        this.answerInput.focus();
+
+        this.answerInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") this.checkAnswer();
+        });
+      }
+
+      createProblem() {
+        if (this.activeProblem) {
+          clearTimeout(this.activeProblem.timeoutId);
+          this.arena.innerHTML = '';
+        }
+
+        // Generate quadratic equation
+        const a = 1;
+        let b = Math.floor(Math.random() * 21) - 10;
+        let c = Math.floor(Math.random() * 21) - 10;
+        const questionType = Math.random() < 0.5 ? 'sum' : 'product';
+
+        // Format equation
+        let equation = `x²`;
+        if (b !== 0) {
+          equation += ` ${b > 0 ? '+' : '-'} ${Math.abs(b) === 1 ? '' : Math.abs(b)}x`.replace(' 1x', ' x');
+        }
+        if (c !== 0) {
+          equation += ` ${c > 0 ? '+' : '-'} ${Math.abs(c)}`;
+        }
+        equation += ' = 0';
+
+        // Calculate answer
+        const answer = questionType === 'sum' ? -b : c;
+
+        // Create problem element
+        const problemElem = document.createElement('div');
+        problemElem.className = 'math-problem';
+        problemElem.innerHTML = `
+          <div>${equation}</div>
+          <div style="font-size: 24px; margin-top: 10px;">What is the ${questionType} of roots?</div>
+          <div class="timer-bar"></div>
+        `;
+        problemElem.dataset.answer = answer;
+
+        const timeoutId = setTimeout(() => {
+          this.handleMiss();
+        }, 60000);
+
+        this.activeProblem = {
+          element: problemElem,
+          timeoutId: timeoutId
+        };
+
+        this.arena.appendChild(problemElem);
+      }
+
+      checkAnswer() {
+        const userAnswer = parseInt(this.answerInput.value);
+        if (isNaN(userAnswer)) return;
+
+        this.answerInput.value = '';
+        if (!this.activeProblem) return;
+
+        const correctAnswer = parseInt(this.activeProblem.element.dataset.answer);
+        
+        if (userAnswer === correctAnswer) {
+          clearTimeout(this.activeProblem.timeoutId);
+          this.activeProblem.element.classList.add('catch-fire');
+          this.activeProblem.element.addEventListener('animationend', () => {
+            this.score += 10;
+            this.scoreDisplay.textContent = this.score;
+            this.createProblem();
+          }, { once: true });
+        } else {
+          clearTimeout(this.activeProblem.timeoutId);
+          this.handleIncorrectAnswer();
+        }
+      }
+
+      handleIncorrectAnswer() {
+        this.lives--;
+        this.livesDisplay.innerHTML = '❤️'.repeat(this.lives);
+        
+        if (this.lives <= 0) {
+          this.gameOver();
+        } else {
+          this.createProblem();
+        }
+      }
+
+      handleMiss() {
+        this.handleIncorrectAnswer();
+      }
+
+      gameOver() {
+        this.answerInput.disabled = true;
+        alert(`Game Over! Final Score: ${this.score}`);
+        document.getElementById('startGame').style.display = 'block';
+      }
+    }
+
+    let gameInstance = null;
+    function startGame() {
+      document.getElementById('startGame').style.display = 'none';
+      gameInstance = new MathDefender();
+    }
+
+    startGame();
+    document.getElementById('startGame').addEventListener('click', startGame);
+  </script>
+</body>
+</html>
