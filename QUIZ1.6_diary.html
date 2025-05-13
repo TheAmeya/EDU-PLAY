@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            max-width: 600px;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: auto;
+            height: 80vh;
+            scrollbar-width: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+        }
+        .option:hover {
+            background-color: #c5c5c5;
+        }
+        input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+
+    <!-- Questions -->
+    <div class="question" id="q1">
+        <p>1. Choose the correct sentence:</p>
+        <label class="option"><input type="radio" name="q1" value="She go to school every day."> She go to school every day.</label>
+        <label class="option"><input type="radio" name="q1" value="She goes to school every day."> She goes to school every day.</label>
+        <label class="option"><input type="radio" name="q1" value="She going to school every day."> She going to school every day.</label>
+        <label class="option"><input type="radio" name="q1" value="She is go to school every day."> She is go to school every day.</label>
+    </div>
+
+    <div class="question" id="q2">
+        <p>2. Which sentence is correct?</p>
+        <label class="option"><input type="radio" name="q2" value="He has went to the market."> He has went to the market.</label>
+        <label class="option"><input type="radio" name="q2" value="He has gone to the market."> He has gone to the market.</label>
+        <label class="option"><input type="radio" name="q2" value="He have gone to the market."> He have gone to the market.</label>
+        <label class="option"><input type="radio" name="q2" value="He had go to the market."> He had go to the market.</label>
+    </div>
+
+    <div class="question" id="q3">
+        <p>3. Identify the adjective: "The small boy ran quickly."</p>
+        <label class="option"><input type="radio" name="q3" value="Small"> Small</label>
+        <label class="option"><input type="radio" name="q3" value="Boy"> Boy</label>
+        <label class="option"><input type="radio" name="q3" value="Ran"> Ran</label>
+        <label class="option"><input type="radio" name="q3" value="Quickly"> Quickly</label>
+    </div>
+
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    function submitQuiz() {
+        const correctAnswers = {
+            q1: "She goes to school every day.",
+            q2: "He has gone to the market.",
+            q3: "Small"
+        };
+
+        let score = 0;
+        let totalQuestions = Object.keys(correctAnswers).length;
+
+        document.querySelectorAll('.option').forEach(option => {
+            option.classList.remove('correct', 'wrong');
+        });
+
+        Object.keys(correctAnswers).forEach(questionId => {
+            const selectedOption = document.querySelector(`input[name='${questionId}']:checked`);
+            if (selectedOption) {
+                const selectedValue = selectedOption.value;
+                const options = document.querySelectorAll(`#${questionId} .option`);
+                
+                options.forEach(option => {
+                    if (option.textContent.includes(correctAnswers[questionId])) {
+                        option.classList.add('correct');
+                    } else if (selectedValue === option.textContent.trim()) {
+                        option.classList.add('wrong');
+                    }
+                });
+
+                if (selectedValue === correctAnswers[questionId]) {
+                    score++;
+                }
+            }
+        });
+
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            alert(`Your score: ${score}/${totalQuestions} (${percentage}%)`);
+
+            if (percentage >= 80) {
+                window.location.href = 'diary_1.4.html';
+            } else {
+                window.location.href = 'failure.html';
+            }
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>

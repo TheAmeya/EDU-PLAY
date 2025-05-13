@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scrabble Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .game-container {
+      text-align: center;
+      border-radius: 8px;
+      background-color: white;
+      padding: 30px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .letters-container, .word-input-container, .valid-words-container {
+      margin-bottom: 20px;
+    }
+
+    .letters {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 5px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .letters div {
+      padding: 8px 12px;
+      margin: 5px;
+      background-color: #4CAF50;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    input {
+      padding: 10px;
+      width: 200px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #f1f1f1;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    h3 {
+      font-size: 20px;
+    }
+
+    .timer {
+      font-size: 24px;
+      font-weight: bold;
+      color: red;
+    }
+
+    .hearts {
+      font-size: 24px;
+      color: red;
+    }
+
+    .heart {
+      margin: 0 5px;
+      font-size: 30px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Scrabble Game</h1>
+    <div class="letters-container">
+      <h3>Shuffled Letters:</h3>
+      <div id="letters" class="letters"></div>
+    </div>
+    <div class="word-input-container">
+      <input type="text" id="user-word" placeholder="Enter a word" />
+      <button id="submit-word">Submit Word</button>
+    </div>
+    <h3>Score: <span id="score">0</span></h3>
+    <h3>Time Left: <span id="timer" class="timer">30</span> seconds</h3>
+    <h3>Lives: <span id="hearts" class="hearts"></span></h3>
+    <div class="valid-words-container">
+      <h3>Valid Words:</h3>
+      <ul id="valid-words"></ul>
+    </div>
+  </div>
+
+  <script>
+    const lettersContainer = document.getElementById("letters");
+    const userWordInput = document.getElementById("user-word");
+    const submitButton = document.getElementById("submit-word");
+    const scoreDisplay = document.getElementById("score");
+    const validWordsList = document.getElementById("valid-words");
+    const timerDisplay = document.getElementById("timer");
+    const heartsDisplay = document.getElementById("hearts");
+  
+    let letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    let validWords = [];
+    let score = 0;
+    let lives = 3; 
+    let timer = 60;
+    let timerInterval;
+  
+    function sl() {  // Shuffle letters
+      for (let i = letters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [letters[i], letters[j]] = [letters[j], letters[i]];
+      }
+    }
+  
+    function dl() {  // Display letters
+      lettersContainer.innerHTML = '';
+      letters.forEach(letter => {
+        const letterElement = document.createElement('div');
+        letterElement.textContent = letter;
+        letterElement.onclick = () => altw(letter);
+        lettersContainer.appendChild(letterElement);
+      });
+    }
+  
+    function altw(letter) {  // Add letter to word input
+      userWordInput.value += letter;
+    }
+  
+    function updateLives() {
+      heartsDisplay.innerHTML = '❤️'.repeat(lives);
+    }
+  
+    function updateScore() {
+      scoreDisplay.textContent = score;
+    }
+  
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timer--;
+        timerDisplay.textContent = timer;
+        if (timer === 0) {
+          clearInterval(timerInterval);
+          alert("Time's up! Game over.");
+          disableGame();
+        }
+      }, 1000);
+    }
+  
+    function disableGame() {
+      userWordInput.disabled = true;
+      submitButton.disabled = true;
+      lettersContainer.style.pointerEvents = "none";
+    }
+  
+    function checkWord() {
+      const userWord = userWordInput.value.toUpperCase();
+      const validWordsListArr = ['CAB', 'FACE', 'BAD', 'CAGE', 'FAG', 'HAG', 'GAG','THROW','HAT', 'COT', 'LAMP', 'DOG', 'BOOK', 'LION', 'POT', 'FIRE', 'PEN', 'MOUSE', 
+'JUMP', 'KING', 'QUIZ', 'LEAD', 'TONE', 'RAT', 'CUP', 'COOL', 'NEON', 'BARK',  'TOAD', 'MINK', 'GLOW', 'CART', 'FLOW', 'PARK', 'STAY', 'FIRE', 'PLOW', 'JACK',  
+'MOON', 'DART', 'HARP', 'SING', 'BARK', 'ROCK', 'PUSH', 'HUG', 'ROLL', 'STAY',  'SLIP', 'TRAP', 'WISH', 'GATE', 'VANE', 'LINE', 'SHOUT', 'HAVE', 'RAKE', 'LIFT',  
+'RUSH', 'RACE', 'MIND', 'WAVE', 'MELT', 'BUMP', 'PLOW', 'RISE', 'BEAM', 'JACK', 'FALL', 'RIDE', 'RARE', 'FUSE', 'HOP', 'BOAT', 'MOVE', 'RUNG', 'FELL', 'MICE',  
+'WRAP', 'TAKE', 'BOIL', 'VANE', 'PAST', 'WEAR', 'RAZE', 'BEAT', 'HOLE', 'PEAR','SLEEP', 'PEAR', 'BITE', 'NOTE', 'HOLD', 'GIFT', 'MASK', 'ROSE', 'RANT', 'BRAG',  
+'WORM', 'BLOW', 'PUSH', 'MART', 'SIT', 'SINK', 'TALE', 'LOVE', 'FIRM', 'SILK','FIND', 'HIT', 'BARK', 'TAKE', 'KISS', 'FLIP', 'BOOT', 'GASP', 'DROP', 'ROLL',
+'BARK', 'POT', 'LAMP', 'TONE', 'FIRE', 'PEN', 'MOON', 'JUMP', 'COT', 'DOG', 'KING', 'QUIZ', 'RAT', 'CUP', 'COOL', 'NEON', 'BARK', 'TOAD', 'MINK', 'GLOW',  
+'CART', 'FLOW', 'PARK', 'STAY', 'FIRE', 'PLOW', 'JACK', 'DART', 'HARP', 'SING', 'ROCK', 'PUSH', 'HUG', 'ROLL', 'SLIP', 'TRAP', 'WISH', 'GATE', 'VANE', 'LINE',  
+'SHOUT', 'HAVE', 'RAKE', 'LIFT', 'RUSH', 'RACE', 'MIND', 'WAVE', 'MELT', 'BUMP', 'RISE', 'BEAM', 'JACK', 'FALL', 'RIDE', 'RARE', 'FUSE', 'HOP', 'BOAT', 'MOVE',  
+'RUNG', 'FELL', 'MICE', 'WRAP', 'TAKE', 'BOIL', 'VANE', 'PAST', 'WEAR', 'RAZE','BEAT', 'HOLE', 'PEAR', 'SLEEP', 'PEAR', 'BITE', 'NOTE', 'HOLD', 'GIFT', 'MASK',  
+'ROSE', 'RANT', 'BRAG', 'WORM', 'BLOW', 'PUSH', 'MART', 'SIT', 'SINK', 'TALE', 'LOVE', 'FIRM', 'SILK', 'FIND', 'HIT', 'BARK', 'TAKE', 'KISS', 'FLIP', 'BOOT',  
+'GASP', 'DROP', 'ROLL', 'TELL', 'MASH', 'BONE', 'LACE', 'RAIN', 'BITE', 'CLAY','BURN', 'RAT', 'HIT', 'FIRM', 'MESH', 'PINE', 'HIDE', 'POT', 'MELT', 'LIFT',
+'PAST', 'PLOW', 'WING', 'SHUT', 'GRAB', 'VILE', 'ROAD', 'BARK', 'SINK', 'FLAP','VOLT', 'WARM', 'MINT', 'BOAT', 'SING', 'MICE', 'DART', 'FLIP', 'LACE', 'BELL',
+'JUMP', 'BAG', 'VIBE', 'COLD', 'RAY', 'CART', 'STOP', 'FALL', 'MOON', 'WILT','BITE', 'BARK', 'ROSE', 'LAMP', 'PUSH', 'DROP', 'SINK', 'FALL', 'VAST', 'HAVE',
+'BLOW', 'JACK', 'BARK', 'TELL', 'MELT', 'BEND', 'FIRM', 'PUSH', 'JUMP', 'PIT','HIT', 'VAN', 'COLD', 'WEAR', 'RAIN', 'VILE', 'MELT', 'LOVE', 'TELL', 'GRAB',
+'SINK', 'JACK', 'BOAT', 'FLUX', 'PUSH', 'VOTE', 'JUMP', 'RIDE', 'HOLE', 'MELT','BARK', 'TACK', 'GLOW', 'HIT', 'LACE', 'CUP', 'RAGE', 'HOPE', 'WARM', 'HAVE',
+'TAKE', 'BASK', 'FLUX', 'COOL', 'VAST', 'BLOW', 'CART', 'HUG', 'PUSH', 'KICK','BAG', 'PAST', 'WARM', 'GLOW', 'RAY', 'POT', 'CUP', 'MINT', 'FALL', 'RIDE',
+'VAST', 'TELL', 'BARK', 'HIT', 'FLAP', 'WAVE', 'MESH', 'DROP', 'LIFT', 'SINK','BLOW', 'WILT', 'COLD', 'RAT', 'VIBE', 'JUMP', 'RACE', 'TACK', 'PUSH', 'GRAB',
+'SING', 'MOON', 'ROAD', 'BARK', 'BITE', 'CART', 'VOLT', 'HOP', 'MASH', 'BEND','JACK', 'ROSE', 'HAVE', 'TELL', 'LACE', 'BARK', 'FIRE', 'BELL', 'RANK', 'BOLT',
+'PUSH', 'FLUX', 'VIBE', 'MELT', 'HOPE', 'GIFT', 'TUNE', 'PIT', 'RAT', 'WORM','BEND', 'MELT', 'HIT', 'PUSH', 'JACK', 'MICE', 'BARK', 'SINK', 'ROAD', 'RING',
+'FIRM', 'BLOOM', 'COLD', 'CUP', 'RIDE', 'BARK', 'MINT', 'VAST', 'FLIP', 'GRAB','RANK', 'SINK', 'BLOW', 'LAMP', 'JUMP', 'VOTE', 'RAY', 'HOPE', 'GLOW', 'SINK',
+'WARM', 'COLD', 'TAKE', 'BARK', 'BITE', 'MELT', 'HAVE', 'JACK', 'LIFT', 'PUSH','POT', 'LAMP', 'BARK', 'FIRE', 'HIT', 'WAVE', 'BELL', 'ROAD', 'SINK', 'TACK',
+'BLOOM', 'COLD', 'RAT', 'MESH', 'VOLT', 'RIDE', 'FLAP', 'HUG', 'MINT', 'VAST','DROP', 'PUSH', 'RANK', 'MELT', 'BARK', 'CUP', 'MICE', 'VIBE', 'JACK', 'GLOW',
+'PIT', 'TELL', 'BITE', 'MELT', 'LIFT', 'BARK', 'FIRM', 'ROAD', 'GRAB', 'JUMP','RING', 'VOTE', 'WARM', 'SINK', 'CART', 'FALL', 'HAVE', 'MASH', 'HIT', 'BLOW',
+'RAT', 'PUSH', 'LACE', 'CUP', 'JACK', 'MINT', 'BARK', 'VAST', 'BEND', 'FLUX','PIT', 'MELT', 'TACK', 'HAVE', 'FLAP', 'GIFT', 'SING', 'WORM', 'PUSH', 'BARK',
+'RANK', 'BITE', 'TELL', 'JUMP', 'BLOW', 'COOL', 'RAT', 'SINK', 'VOLT', 'ROAD','PUSH', 'FALL', 'CART', 'RANK', 'HIT', 'VIBE', 'BARK', 'MELT', 'MINT', 'VAST',
+'RAT', 'LAMP', 'DROP', 'MELT', 'FLIP', 'PIT', 'JACK', 'TELL', 'SINK', 'WAVE','BARK', 'POT', 'MINT', 'JACK', 'RAT', 'CUP', 'FLUX', 'HIT', 'ROAD', 'BLOW',
+'BARK', 'SINK', 'LAMP', 'BITE', 'TACK', 'COLD', 'VAST', 'MELT', 'GRAB', 'TELL','WARM', 'FLAP', 'VIBE', 'PUSH', 'FALL', 'MASH', 'HAVE', 'RANK', 'RIDE', 'SING',
+'BARK', 'RAT', 'MINT', 'LIFT', 'JUMP', 'CUP', 'HIT', 'FLUX', 'BITE', 'RANK','ROAD', 'MELT', 'PIT', 'WAVE', 'JACK', 'CART', 'VOLT', 'BARK', 'BLOW', 'RAT',
+'FIRE', 'SINK', 'RIDE', 'PUSH', 'MELT', 'TELL', 'RANK', 'FLAP', 'MICE', 'BARK','BLOW', 'LACE', 'JUMP', 'VAST', 'GLOW', 'BEND', 'MELT', 'RAT', 'POT', 'TACK',
+'COLD', 'FIRM', 'PUSH', 'ROAD', 'FLUX', 'MINT', 'BARK', 'VIBE', 'SINK', 'BITE','JACK', 'FALL', 'RANK', 'BARK', 'MELT', 'RIDE', 'HIT', 'TELL', 'PUSH', 'GRAB',
+'FIRM', 'MASH', 'LAMP', 'WARM', 'JUMP', 'VOLT', 'RAT', 'SINK', 'ROAD', 'CUP','TREE', 'SHOUT', 'CAR', 'BALL', 'MOON', 'BRAVE', 'TIGER', 'FLIGHT', 'BEAUTY', 'SINK',
+'VIBES', 'ROAD', 'FIRE', 'MELT', 'WARM', 'PUSH', 'LAMP', 'BOOK', 'RUN', 'BARK','SKY', 'POT', 'COLD', 'STORM', 'FALL', 'GLOW', 'WAVE', 'MELT', 'CUP', 'FIRM',
+'RING', 'FALL', 'LACE', 'TELL', 'JUMP', 'RANK', 'PIT', 'BEND', 'GIFT', 'HOPE','BARK', 'JACK', 'COOL', 'DRIFT', 'MICE', 'BLOOM', 'ROSE', 'GRAB', 'SING', 'BITE',
+'RACE', 'LINE', 'CART', 'VOTE', 'VINE', 'KISS', 'BLOW', 'HIT', 'JACK', 'PUSH','TURN', 'DIVE', 'SOAR', 'MELT', 'PEAR', 'SHINE', 'DEEP', 'TOUCH', 'DARK', 'FALL',
+'RUSH', 'PINK', 'LION', 'FIRM', 'GLOW', 'HOP', 'FIRE', 'SINK', 'BURN', 'MINT','SPARK', 'VIBE', 'RING', 'MINT', 'CART', 'VOLT', 'JUMP', 'BEAR', 'HOPE', 'BITE',
+'PEAR', 'FLOW', 'MIND', 'VAST', 'KICK', 'WIDE', 'LEAD', 'ROAD', 'SNOW', 'TELL','VAST', 'MIND', 'BARK', 'TOAD', 'BOIL', 'GIFT', 'FIRM', 'BRIGHT', 'SINK', 'MELT','ELEPHANT', 'COMPUTER', 'MAGIC', 'WATERMELON', 'GIRAFFE', 'MOUNTAIN', 'JOURNEY', 'FIREPLACE', 'RAINBOW', 'BUTTERFLY','PHOTOGRAPH', 'OCEAN', 'FESTIVAL', 'SCHOOL', 'HORIZON', 'FESTIVAL', 'TURTLE', 'COFFEE', 'PICTURE', 'GUITAR','PLANET', 'MUSIC', 'LIBRARY', 'ADVENTURE', 'GARDEN', 'FLORENCE', 'DOLPHIN', 'MOUNTAIN', 'BALLOON', 'BICYCLE','CONCERT', 'LIGHTHOUSE', 'CAMPING', 'NATURE', 'MUSEUM', 'PARKING', 'VACATION', 'SPACESHIP', 'FRIENDSHIP', 'BREAD','RAPID', 'BOOKSTORE', 'MEDITATION', 'SPIDER', 'SHADOW', 'EARTHQUAKE', 'WOLVES', 'CAMERA', 'TREASURE', 'JOURNAL','LAKE', 'BOTTLE', 'STRAWBERRY', 'TURKEY', 'PIE', 'SWEATER', 'BALLOON', 'PENCIL', 'UNIVERSE', 'BOAT','PLANE', 'FURNITURE', 'CLOUD', 'DINOSAUR', 'HONEY', 'ZEBRA', 'LANTERN', 'SNOWFLAKE', 'SQUIRREL', 'BRAINSTORM','WALNUT', 'PENGUIN', 'GIRAFFE', 'SURFBOARD', 'HARMONY', 'PYRAMID', 'MEADOW', 'LIBRARY', 'MIRROR', 'CUPCAKE',
+'TRAVEL', 'TOURISM', 'ANIMAL', 'FIREWORKS', 'SHRIMP', 'WOLVES', 'CHOCOLATE', 'MOTORCYCLE', 'HIKING', 'CYCLE','ADVENTURE', 'SUNSHINE', 'WATERFALL', 'ROBOTICS', 'ELEVATOR', 'TRIANGLE', 'OCTOPUS', 'MEADOW', 'BIRTHDAY', 'TURTLE','FIREWORKS', 'MICROPHONE', 'ELEPHANT', 'GUITAR', 'RIVER', 'EXPLORATION', 'JOURNEY', 'FESTIVAL', 'COMPUTER', 'HORIZON',
+'WOLVES', 'BUTTERFLY', 'PENGUIN', 'MOUNTAIN', 'WALRUS', 'HARMONY', 'SNOWFLAKE', 'TURKEY', 'LIBRARY', 'CAMPING','EXPLORER', 'TREASURE', 'FESTIVAL', 'SPACESHIP', 'COFFEE', 'DINOSAUR', 'DREAM', 'PIRATE', 'SPACEMAN', 'FLORENCE','BALLOON', 'BOOKSTORE', 'CANDLE', 'PICTURE', 'VACATION', 'PUMPKIN', 'STRAWBERRY', 'GUITAR', 'GIRAFFE', 'MELON',
+'BRAINSTORM', 'LIGHTHOUSE', 'PLANE', 'RAPID', 'MELTING', 'OCEAN', 'JOURNAL', 'COASTLINE', 'FURNITURE', 'BICYCLE','WINDOW', 'TURTLE', 'FROST', 'FLOWER', 'CRYSTAL', 'CUPCAKE', 'SNOWFLAKE', 'ROADTRIP', 'LANTERN', 'PINEAPPLE','GARDEN', 'ANIMAL', 'BALLOON', 'BOOKMARK', 'LION', 'MAGICIAN', 'BOTTLE', 'SKATEBOARD', 'PHOTOGRAPH', 'TREK',
+'BRAINSTORM', 'MUSEUM', 'FIREPLACE', 'PIRATE', 'TOURISM', 'CHOCOLATE', 'SURFBOARD', 'OCTOPUS', 'EXPLORATION', 'BOTTLE',
+'CAB', 'FACE', 'BAD', 'CAGE', 'QUIZ', 'HAT', 'COT', 'LAMP', 'DOG', 'BOOK', 'LION','HOUSE'];
+  
+      if (userWord.length > 0 && !validWords.includes(userWord) && validWordsListArr.includes(userWord)) {
+        validWords.push(userWord);
+        score += userWord.length;
+        updateScore();
+        displayValidWords();
+      } else {
+        lives--;
+        updateLives();
+        if (lives === 0) {
+          alert("Game over! You ran out of lives.");
+          disableGame();
+        }
+      }
+      userWordInput.value = '';
+    }
+  
+    function displayValidWords() {
+      validWordsList.innerHTML = validWords.map(word => `<li>${word}</li>`).join('');
+    }
+  
+    window.onload = function () {
+      sl();
+      dl();
+      updateLives();
+      startTimer();
+    };
+  
+    submitButton.addEventListener("click", checkWord);
+  </script>
+  
+

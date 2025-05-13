@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        input[type="checkbox"]:checked + label {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+    <div id="questions"></div>
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    const questions = [
+        { id: "q1", text: "Which of these words is a noun?", options: ["Walk", "Play", "Happiness", "Sleep"], answer: "Happiness" },
+        { id: "q2", text: "Which word is the opposite of 'arrival'?", options: ["Departure", "Entry", "Welcome", "Return"], answer: "Departure" },
+        { id: "q3", text: "Which word best describes a person who never gives up?", options: ["Determined", "Lazy", "Afraid", "Careless"], answer: "Determined" },
+        { id: "q4", text: "What does the idiom 'costs an arm and a leg' mean?", options: ["Something very cheap", "Something very expensive", "Something easy to get", "Something impossible"], answer: "Something very expensive" },
+        { id: "q5", text: "Choose the correct spelling:", options: ["Embarrass", "Embarass", "Embarras", "Imbarass"], answer: "Embarrass" },
+        { id: "q6", text: "Which word means 'someone who writes poems'?", options: ["Singer", "Poet", "Artist", "Author"], answer: "Poet" },
+        { id: "q7", text: "What does 'running out of time' mean?", options: ["Having no time left", "Running very fast", "Running for fun", "Getting extra time"], answer: "Having no time left" },
+        { id: "q8", text: "Which of these words is a synonym for 'decrease'?", options: ["Increase", "Expand", "Reduce", "Grow"], answer: "Reduce" },
+        { id: "q9", text: "What is the opposite of 'attack'?", options: ["Defend", "Destroy", "Guard", "Harm"], answer: "Defend" }
+    ];
+
+    function loadQuestions() {
+        const questionContainer = document.getElementById("questions");
+        questions.forEach(q => {
+            const questionDiv = document.createElement("div");
+            questionDiv.classList.add("question");
+            questionDiv.id = q.id;
+            
+            const questionText = document.createElement("p");
+            questionText.textContent = q.text;
+            questionDiv.appendChild(questionText);
+            
+            q.options.forEach(option => {
+                const optionDiv = document.createElement("div");
+                optionDiv.classList.add("option");
+                
+                const input = document.createElement("input");
+                input.type = "checkbox";
+                input.name = q.id;
+                input.value = option;
+                input.onclick = () => handleSelection(q.id, input);
+                
+                const label = document.createElement("label");
+                label.textContent = option;
+                
+                optionDiv.appendChild(input);
+                optionDiv.appendChild(label);
+                questionDiv.appendChild(optionDiv);
+            });
+            
+            questionContainer.appendChild(questionDiv);
+        });
+    }
+
+    let selectedAnswers = {};
+
+    function handleSelection(questionId, selectedOption) {
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            if (option !== selectedOption) {
+                option.checked = false;
+            }
+        });
+        selectedAnswers[questionId] = selectedOption.value;
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        let totalQuestions = questions.length;
+        
+        questions.forEach(q => {
+            const correctAnswer = q.answer;
+            const selectedAnswer = selectedAnswers[q.id];
+            
+            if (selectedAnswer) {
+                const options = document.querySelectorAll(`#${q.id} .option`);
+                options.forEach(option => {
+                    const label = option.querySelector("label");
+                    if (label.textContent === correctAnswer) {
+                        label.classList.add("correct");
+                    }
+                    if (selectedAnswer !== correctAnswer && label.textContent === selectedAnswer) {
+                        label.classList.add("wrong");
+                    }
+                });
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+        });
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            window.location.href = percentage >= 80 ? 'diary_1.4.html' : 'failure.html';
+        }, 3000);
+    }
+
+    window.onload = loadQuestions;
+</script>
+
+</body>
+</html>

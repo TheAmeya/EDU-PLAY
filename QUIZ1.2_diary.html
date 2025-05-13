@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Example</title>
+    <style>
+        body {
+            font-family: 'Sans-serif', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        input[type="checkbox"]:checked + label {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Take a Quick Quiz!</h2>
+<!-- Question 1 -->
+<div class="question" id="q1">
+    <p>1. Which word is a synonym for "brave"?</p>
+    <div class="option">
+        <input type="checkbox" name="q1" value="Timid" onclick="handleSelection('q1', this)">
+        <label>Timid</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q1" value="Fearless" onclick="handleSelection('q1', this)">
+        <label>Fearless</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q1" value="Weak" onclick="handleSelection('q1', this)">
+        <label>Weak</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q1" value="Lazy" onclick="handleSelection('q1', this)">
+        <label>Lazy</label>
+    </div>
+</div>
+
+<!-- Question 2 -->
+<div class="question" id="q2">
+    <p>2. Choose the antonym of "expand".</p>
+    <div class="option">
+        <input type="checkbox" name="q2" value="Enlarge" onclick="handleSelection('q2', this)">
+        <label>Enlarge</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q2" value="Shrink" onclick="handleSelection('q2', this)">
+        <label>Shrink</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q2" value="Widen" onclick="handleSelection('q2', this)">
+        <label>Widen</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q2" value="Increase" onclick="handleSelection('q2', this)">
+        <label>Increase</label>
+    </div>
+</div>
+
+<!-- Question 3 -->
+<div class="question" id="q3">
+    <p>3. What does the word "optimistic" mean?</p>
+    <div class="option">
+        <input type="checkbox" name="q3" value="Hopeful and positive" onclick="handleSelection('q3', this)">
+        <label>Hopeful and positive</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q3" value="Sad and depressed" onclick="handleSelection('q3', this)">
+        <label>Sad and depressed</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q3" value="Angry and aggressive" onclick="handleSelection('q3', this)">
+        <label>Angry and aggressive</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q3" value="Lazy and careless" onclick="handleSelection('q3', this)">
+        <label>Lazy and careless</label>
+    </div>
+</div>
+
+<!-- Question 4 -->
+<div class="question" id="q4">
+    <p>4. Which word is spelled correctly?</p>
+    <div class="option">
+        <input type="checkbox" name="q4" value="Definately" onclick="handleSelection('q4', this)">
+        <label>Definately</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q4" value="Definitely" onclick="handleSelection('q4', this)">
+        <label>Definitely</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q4" value="Defenetly" onclick="handleSelection('q4', this)">
+        <label>Defenetly</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q4" value="Definetly" onclick="handleSelection('q4', this)">
+        <label>Definetly</label>
+    </div>
+</div>
+
+<!-- Question 5 -->
+<div class="question" id="q5">
+    <p>5. Which word fits best? "She was ____ by the magician’s trick."</p>
+    <div class="option">
+        <input type="checkbox" name="q5" value="Amazed" onclick="handleSelection('q5', this)">
+        <label>Amazed</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q5" value="Boring" onclick="handleSelection('q5', this)">
+        <label>Boring</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q5" value="Scared" onclick="handleSelection('q5', this)">
+        <label>Scared</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q5" value="Worried" onclick="handleSelection('q5', this)">
+        <label>Worried</label>
+    </div>
+</div>
+
+<!-- Question 6 -->
+<div class="question" id="q6">
+    <p>6. Choose the correct spelling:</p>
+    <div class="option">
+        <input type="checkbox" name="q6" value="Recieve" onclick="handleSelection('q6', this)">
+        <label>Recieve</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q6" value="Receive" onclick="handleSelection('q6', this)">
+        <label>Receive</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q6" value="Receeve" onclick="handleSelection('q6', this)">
+        <label>Receeve</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q6" value="Recive" onclick="handleSelection('q6', this)">
+        <label>Recive</label>
+    </div>
+</div>
+
+<!-- Question 7 -->
+<div class="question" id="q7">
+    <p>7. What does the idiom "hit the sack" mean?</p>
+    <div class="option">
+        <input type="checkbox" name="q7" value="To go to bed" onclick="handleSelection('q7', this)">
+        <label>To go to bed</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q7" value="To start a fight" onclick="handleSelection('q7', this)">
+        <label>To start a fight</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q7" value="To eat a meal" onclick="handleSelection('q7', this)">
+        <label>To eat a meal</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q7" value="To lose a game" onclick="handleSelection('q7', this)">
+        <label>To lose a game</label>
+    </div>
+</div>
+
+<!-- Question 8 -->
+<div class="question" id="q8">
+    <p>8. Which word means "a person who writes books"?</p>
+    <div class="option">
+        <input type="checkbox" name="q8" value="Artist" onclick="handleSelection('q8', this)">
+        <label>Artist</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q8" value="Author" onclick="handleSelection('q8', this)">
+        <label>Author</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q8" value="Athlete" onclick="handleSelection('q8', this)">
+        <label>Athlete</label>
+    </div>
+    <div class="option">
+        <input type="checkbox" name="q8" value="Musician" onclick="handleSelection('q8', this)">
+        <label>Musician</label>
+    </div>
+</div>
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    let selectedAnswers = {};
+
+    function handleSelection(questionId, selectedOption) {
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            if (option !== selectedOption) {
+                option.checked = false;
+            }
+        });
+        selectedAnswers[questionId] = selectedOption.value;
+    }
+
+    function submitQuiz() {
+        const correctAnswers = {
+            q1: ['Fearless'], 
+            q2: ['Shrink'], 
+            q3: ['Hopeful and positive'], 
+            q4: ['Definitely'], 
+            q5: ['Amazed'], 
+            q6: ['Receive'], 
+            q7: ['To go to bed'], 
+            q8: ['Author']
+        };
+
+        let score = 0;
+        let totalQuestions = Object.keys(correctAnswers).length;
+
+        // Reset previous feedback
+        document.querySelectorAll('.correct, .wrong').forEach(label => {
+            label.classList.remove('correct', 'wrong');
+        });
+
+        Object.keys(correctAnswers).forEach(questionId => {
+            const correctAnswer = correctAnswers[questionId][0];
+            const selectedAnswer = selectedAnswers[questionId];
+
+            if (selectedAnswer) {
+                const options = document.querySelectorAll(`#${questionId} .option`);
+                
+                options.forEach(option => {
+                    const label = option.querySelector('label');
+                    if (label.textContent.trim() === correctAnswer) {
+                        label.classList.add('correct');
+                    }
+                    if (label.textContent.trim() === selectedAnswer && selectedAnswer !== correctAnswer) {
+                        label.classList.add('wrong');
+                    }
+                });
+
+                if (correctAnswers[questionId].includes(selectedAnswer)) {
+                    score++;
+                }
+            }
+        });
+
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            if (percentage >= 80) {
+                window.location.href = 'diary 1.2.html';
+            } else {
+                window.location.href = 'failure.html';
+            }
+        }, 2000);
+    }
+</script>
+
+
+</body>
+</html>

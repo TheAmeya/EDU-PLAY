@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: auto;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 16px;
+        }
+        .option:hover {
+            background-color: #cfcfcf;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+    <div id="questions"></div>
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    let selectedAnswers = {};
+    const questions = [
+        { id: 'q1', question: 'What is the plural of "child"?', options: ['Childs', 'Children', 'Childes', 'Childies'], answer: 'Children' },
+        { id: 'q2', question: 'Which word means "to make something clean and tidy"?', options: ['Mess', 'Clean', 'Dirt', 'Stain'], answer: 'Clean' },
+        { id: 'q3', question: 'What is the past tense of "go"?', options: ['Went', 'Goed', 'Goes', 'Go'], answer: 'Went' },
+        { id: 'q4', question: 'Which of these is a synonym for "happy"?', options: ['Sad', 'Angry', 'Joyful', 'Bored'], answer: 'Joyful' },
+        { id: 'q5', question: 'Choose the correct spelling of the word that means "necessary for survival."', options: ['Essencial', 'Essential', 'Essensial', 'Esential'], answer: 'Essential' },
+        { id: 'q6', question: 'Which word means "a person who studies the stars and planets"?', options: ['Astronaut', 'Scientist', 'Astronomer', 'Astrologist'], answer: 'Astronomer' },
+        { id: 'q7', question: 'What is the antonym of "strong"?', options: ['Weak', 'Powerful', 'Hard', 'Firm'], answer: 'Weak' }
+    ];
+
+    function loadQuestions() {
+        const quizContainer = document.getElementById('questions');
+        quizContainer.innerHTML = ""; // Clear previous questions
+        questions.forEach(q => {
+            let questionHTML = `<div class='question' id='${q.id}'>
+                                    <p>${q.question}</p>`;
+            q.options.forEach(option => {
+                questionHTML += `<div class='option' onclick="handleSelection('${q.id}', '${option}')">
+                                    <input type='checkbox' name='${q.id}' value='${option}'>
+                                    <label>${option}</label>
+                                </div>`;
+            });
+            questionHTML += `</div>`;
+            quizContainer.innerHTML += questionHTML;
+        });
+    }
+
+    function handleSelection(questionId, selectedOption) {
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            option.checked = option.value === selectedOption;
+        });
+        selectedAnswers[questionId] = selectedOption;
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        let totalQuestions = questions.length;
+
+        document.querySelectorAll('.correct, .wrong').forEach(label => {
+            label.classList.remove('correct', 'wrong');
+        });
+
+        questions.forEach(q => {
+            const correctAnswer = q.answer;
+            const selectedAnswer = selectedAnswers[q.id];
+
+            if (selectedAnswer) {
+                const options = document.querySelectorAll(`#${q.id} .option`);
+                options.forEach(option => {
+                    const label = option.querySelector('label');
+                    if (label.textContent === correctAnswer) {
+                        label.classList.add('correct');
+                    }
+                    if (selectedAnswer !== correctAnswer && label.textContent === selectedAnswer) {
+                        label.classList.add('wrong');
+                    }
+                });
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+        });
+
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            if (percentage >= 60) {
+                window.location.href = 'diary_2.1.html';
+            } else {
+                window.location.href = 'failure.html';
+            }
+        }, 2000);
+    }
+
+    loadQuestions();
+</script>
+
+</body>
+</html>

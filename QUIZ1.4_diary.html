@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: auto;
+            height: 80vh;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            font-size: 16px;
+        }
+        .option:hover {
+            background-color: #ccc;
+        }
+        .option input {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+    <div id="questions"></div>
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    const questions = [
+        { q: "Which word is a synonym for 'happy'?", options: ["Sad", "Joyful", "Angry", "Boring"], correct: "Joyful" },
+        { q: "What does the word 'cautious' mean?", options: ["Careful", "Careless", "Brave", "Friendly"], correct: "Careful" },
+        { q: "Which word means 'to make something larger'?", options: ["Reduce", "Expand", "Ignore", "Decrease"], correct: "Expand" },
+        { q: "Which word is the opposite of 'noisy'?", options: ["Silent", "Loud", "Busy", "Cheerful"], correct: "Silent" },
+        { q: "Choose the correct spelling:", options: ["Commitee", "Committee", "Commetee", "Comittee"], correct: "Committee" },
+        { q: "Which word fits best? 'The teacher was very ____ with the students' behavior.'", options: ["Pleased", "Disappointed", "Excited", "Joyful"], correct: "Pleased" },
+        { q: "What does the idiom 'Break a leg' mean?", options: ["To actually break a leg", "To wish someone good luck", "To lose something valuable", "To be scared"], correct: "To wish someone good luck" },
+        { q: "What is the synonym of 'huge'?", options: ["Tiny", "Massive", "Weak", "Small"], correct: "Massive" },
+        { q: "Which word means 'a place where books are kept'?", options: ["Hospital", "Library", "Park", "Theater"], correct: "Library" },
+        { q: "Choose the antonym of 'ancient'.", options: ["Old", "Modern"], correct: "Modern" }
+    ];
+    
+    const questionContainer = document.getElementById("questions");
+    
+    questions.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.classList.add("question");
+        div.id = `q${index + 1}`;
+        div.innerHTML = `<p>${index + 1}. ${item.q}</p>`;
+        
+        item.options.forEach(option => {
+            const optionDiv = document.createElement("div");
+            optionDiv.classList.add("option");
+            optionDiv.innerHTML = `<input type='radio' name='q${index + 1}' value='${option}'> ${option}`;
+            div.appendChild(optionDiv);
+        });
+        
+        questionContainer.appendChild(div);
+    });
+    
+    function submitQuiz() {
+        let score = 0;
+        
+        questions.forEach((item, index) => {
+            const selected = document.querySelector(`input[name='q${index + 1}']:checked`);
+            if (selected) {
+                const optionDivs = document.querySelectorAll(`#q${index + 1} .option`);
+                optionDivs.forEach(div => {
+                    if (div.textContent.trim() === item.correct) {
+                        div.classList.add("correct");
+                    }
+                    if (selected.value !== item.correct && div.textContent.trim() === selected.value) {
+                        div.classList.add("wrong");
+                    }
+                });
+                if (selected.value === item.correct) {
+                    score++;
+                }
+            }
+        });
+        
+        setTimeout(() => {
+            const percentage = (score / questions.length) * 100;
+            window.location.href = percentage >= 80 ? 'diary_1.4.html' : 'failure.html';
+        }, 3000);
+    }
+</script>
+
+</body>
+</html>

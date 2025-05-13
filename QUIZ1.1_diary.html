@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        .option input {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        .option input:checked + span {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+
+    <!-- Questions -->
+    <div class="question" id="q1">
+        <p>1️⃣ Which sentence is correct?</p>
+        <label class="option"><input type="checkbox" name="q1" value="She don’t like apples." onclick="handleSelection('q1', this)"><span>She don’t like apples.</span></label>
+        <label class="option"><input type="checkbox" name="q1" value="She doesn’t like apples." onclick="handleSelection('q1', this)"><span>She doesn’t like apples.</span></label>
+        <label class="option"><input type="checkbox" name="q1" value="She didn’t likes apples." onclick="handleSelection('q1', this)"><span>She didn’t likes apples.</span></label>
+        <label class="option"><input type="checkbox" name="q1" value="She doesn’t likes apples." onclick="handleSelection('q1', this)"><span>She doesn’t likes apples.</span></label>
+    </div>
+
+    <div class="question" id="q2">
+        <p>2️⃣ Choose the correct past tense sentence:</p>
+        <label class="option"><input type="checkbox" name="q2" value="She eat her lunch quickly." onclick="handleSelection('q2', this)"><span>She eat her lunch quickly.</span></label>
+        <label class="option"><input type="checkbox" name="q2" value="She ate her lunch quickly." onclick="handleSelection('q2', this)"><span>She ate her lunch quickly.</span></label>
+        <label class="option"><input type="checkbox" name="q2" value="She eats her lunch quickly." onclick="handleSelection('q2', this)"><span>She eats her lunch quickly.</span></label>
+        <label class="option"><input type="checkbox" name="q2" value="She was eat lunch quickly." onclick="handleSelection('q2', this)"><span>She was eat lunch quickly.</span></label>
+    </div>
+
+    <div class="question" id="q3">
+        <p>3️⃣ Which sentence is punctuated correctly?</p>
+        <label class="option"><input type="checkbox" name="q3" value='"Where are you going?" she asked.' onclick="handleSelection('q3', this)"><span>"Where are you going?" she asked.</span></label>
+        <label class="option"><input type="checkbox" name="q3" value='"Where are you going she asked?"' onclick="handleSelection('q3', this)"><span>"Where are you going she asked?"</span></label>
+        <label class="option"><input type="checkbox" name="q3" value='"Where are you going?" She asked.' onclick="handleSelection('q3', this)"><span>"Where are you going?" She asked.</span></label>
+    </div>
+
+    <div class="question" id="q4">
+        <p>4️⃣ Choose the correct verb form:</p>
+        <label class="option"><input type="checkbox" name="q4" value="She has went to the market." onclick="handleSelection('q4', this)"><span>She has went to the market.</span></label>
+        <label class="option"><input type="checkbox" name="q4" value="She has gone to the market." onclick="handleSelection('q4', this)"><span>She has gone to the market.</span></label>
+        <label class="option"><input type="checkbox" name="q4" value="She have gone to the market." onclick="handleSelection('q4', this)"><span>She have gone to the market.</span></label>
+    </div>
+
+    <div class="question" id="q5">
+        <p>5️⃣ Identify the adverb in the sentence: "She ran quickly to catch the bus."</p>
+        <label class="option"><input type="checkbox" name="q5" value="Quickly" onclick="handleSelection('q5', this)"><span>Quickly</span></label>
+        <label class="option"><input type="checkbox" name="q5" value="Ran" onclick="handleSelection('q5', this)"><span>Ran</span></label>
+        <label class="option"><input type="checkbox" name="q5" value="Catch" onclick="handleSelection('q5', this)"><span>Catch</span></label>
+    </div>
+
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    let selectedAnswers = {};
+
+    function handleSelection(questionId, selectedOption) {
+        // Uncheck other options
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            if (option !== selectedOption) {
+                option.checked = false;
+            }
+        });
+
+        // Store the selected answer
+        selectedAnswers[questionId] = selectedOption.value.trim();
+    }
+
+    function submitQuiz() {
+        const correctAnswers = {
+            q1: ['She doesn’t like apples.'],
+            q2: ['She ate her lunch quickly.'],
+            q3: ['"Where are you going?" she asked.'],
+            q4: ['She has gone to the market.'],
+            q5: ['Quickly']
+        };
+
+        let score = 0;
+        let totalQuestions = Object.keys(correctAnswers).length;
+
+        // Reset previous feedback
+        document.querySelectorAll('.correct, .wrong').forEach(label => {
+            label.classList.remove('correct', 'wrong');
+        });
+
+        // Check answers and highlight correct/wrong answers
+        Object.keys(correctAnswers).forEach(questionId => {
+            const correctAnswer = correctAnswers[questionId][0];
+            const selectedAnswer = selectedAnswers[questionId];
+
+            if (selectedAnswer) {
+                const options = document.querySelectorAll(`#${questionId} .option`);
+
+                options.forEach(option => {
+                    const label = option.querySelector('span');
+                    if (label.textContent.trim() === correctAnswer) {
+                        label.classList.add('correct');
+                    }
+                    if (label.textContent.trim() === selectedAnswer && selectedAnswer !== correctAnswer) {
+                        label.classList.add('wrong');
+                    }
+                });
+
+                if (correctAnswers[questionId].includes(selectedAnswer)) {
+                    score++;
+                }
+            }
+        });
+
+        // Show result and redirect
+        setTimeout(() => {
+            if (score >= 4) {
+                window.location.href = 'diary1.1.html'; // ✅ Success page
+            } else {
+                window.location.href = 'failure.html'; // ❌ Failure page
+            }
+        }, 2000); // 2 seconds delay before redirect
+    }
+</script>
+
+
+</body>
+</html>

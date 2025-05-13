@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        input[type="checkbox"]:checked + label {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+    <div id="questions"></div>
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    const questions = [
+        { id: "q11", text: "Which word is spelled correctly?", options: ["Accomodate", "Accommodate", "Acommodate", "Acomodate"], answer: "Accommodate" },
+        { id: "q12", text: "Which word means the opposite of 'polite'?", options: ["Respectful", "Rude", "Kind", "Friendly"], answer: "Rude" },
+        { id: "q13", text: "The girl was very ____ when she won the prize.", options: ["Upset", "Excited", "Nervous", "Angry"], answer: "Excited" },
+        { id: "q14", text: "What is a synonym for 'intelligent'?", options: ["Smart", "Clumsy", "Foolish", "Weak"], answer: "Smart" },
+        { id: "q15", text: "Which word means 'to stop doing something'?", options: ["Begin", "Continue", "Quit", "Start"], answer: "Quit" },
+        { id: "q16", text: "Which word is a homophone?", options: ["Bare – Bear", "Tree – Free", "Hard – Card", "Cat – Mat"], answer: "Bare – Bear" },
+        { id: "q17", text: "Choose the correct spelling:", options: ["Beautifull", "Beautiful", "Beutiful", "Beautifal"], answer: "Beautiful" },
+        { id: "q18", text: "Which word means 'a person who travels in space'?", options: ["Astronaut", "Scientist", "Pilot", "Explorer"], answer: "Astronaut" },
+        { id: "q19", text: "What does the idiom 'spill the beans' mean?", options: ["To clean up", "To reveal a secret", "To cook food", "To drop something"], answer: "To reveal a secret" },
+        { id: "q20", text: "Which of the following is a noun?", options: ["Run", "Happiness"], answer: "Happiness" }
+    ];
+
+    function loadQuestions() {
+        const questionContainer = document.getElementById("questions");
+        questions.forEach(q => {
+            let questionHTML = `<div class='question' id='${q.id}'>
+                                    <p>${q.text}</p>`;
+            q.options.forEach(option => {
+                questionHTML += `<div class='option'>
+                                    <input type='checkbox' name='${q.id}' value='${option}' onclick='handleSelection("${q.id}", this)'>
+                                    <label>${option}</label>
+                                </div>`;
+            });
+            questionHTML += `</div>`;
+            questionContainer.innerHTML += questionHTML;
+        });
+    }
+
+    let selectedAnswers = {};
+
+    function handleSelection(questionId, selectedOption) {
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            if (option !== selectedOption) {
+                option.checked = false;
+            }
+        });
+        selectedAnswers[questionId] = selectedOption.value;
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        questions.forEach(q => {
+            const correctAnswer = q.answer;
+            const selectedAnswer = selectedAnswers[q.id];
+            const options = document.querySelectorAll(`#${q.id} .option`);
+
+            options.forEach(option => {
+                const label = option.querySelector('label');
+                if (label.textContent === correctAnswer) {
+                    label.classList.add('correct');
+                }
+                if (selectedAnswer && selectedAnswer !== correctAnswer && label.textContent === selectedAnswer) {
+                    label.classList.add('wrong');
+                }
+            });
+            if (selectedAnswer === correctAnswer) {
+                score++;
+            }
+        });
+
+        setTimeout(() => {
+            const percentage = (score / questions.length) * 100;
+            window.location.href = percentage >= 80 ? 'diary_1.4.html' : 'failure.html';
+        }, 5000);
+    }
+
+    loadQuestions();
+</script>
+
+</body>
+</html>

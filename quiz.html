@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Example</title>
+    <style>
+        body {
+            font-family: 'Sans-serif', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        input[type="checkbox"]:checked + label {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Take a Quick Quiz!</h2>
+
+    <!-- Question 1 -->
+    <div class="question" id="q1">
+        <p>1. What is the capital of France?</p>
+        <div class="option">
+            <input type="checkbox" name="q1" value="Berlin" onclick="handleSelection('q1', this)">
+            <label>Berlin</label>
+        </div>
+        <div class="option">
+            <input type="checkbox" name="q1" value="Madrid" onclick="handleSelection('q1', this)">
+            <label>Madrid</label>
+        </div>
+        <div class="option">
+            <input type="checkbox" name="q1" value="Paris" onclick="handleSelection('q1', this)">
+            <label>Paris</label>
+        </div>
+        <div class="option">
+            <input type="checkbox" name="q1" value="Rome" onclick="handleSelection('q1', this)">
+            <label>Rome</label>
+        </div>
+    </div>
+
+    <!-- Question 2 -->
+    <div class="question" id="q2">
+        <p>2. Who wrote 'Hamlet'?</p>
+        <div class="option">
+            <input type="checkbox" name="q2" value="Charles Dickens" onclick="handleSelection('q2', this)">
+            <label>Charles Dickens</label>
+        </div>
+        <div class="option">
+            <input type="checkbox" name="q2" value="Shakespeare" onclick="handleSelection('q2', this)">
+            <label>Shakespeare</label>
+        </div>
+        <div class="option">
+            <input type="checkbox" name="q2" value="Jane Austen" onclick="handleSelection('q2', this)">
+            <label>Jane Austen</label>
+        </div>
+        <div class="option">
+            <input type="checkbox" name="q2" value="Leo Tolstoy" onclick="handleSelection('q2', this)">
+            <label>Leo Tolstoy</label>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    let selectedAnswers = {};
+
+    // Ensure only one checkbox can be selected per question
+    function handleSelection(questionId, selectedOption) {
+        // Uncheck all other checkboxes in the same question
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            if (option !== selectedOption) {
+                option.checked = false;
+            }
+        });
+
+        // Store the selected answer
+        selectedAnswers[questionId] = selectedOption.value;
+    }
+
+    function submitQuiz() {
+        const correctAnswers = {
+            q1: 'Paris',
+            q2: 'Shakespeare'
+        };
+
+        let score = 0;
+        let totalQuestions = Object.keys(correctAnswers).length;
+
+        // Reset previous feedback
+        document.querySelectorAll('.correct, .wrong').forEach(label => {
+            label.classList.remove('correct', 'wrong');
+        });
+
+        // Check answers and give feedback
+        Object.keys(correctAnswers).forEach(questionId => {
+            const correctAnswer = correctAnswers[questionId];
+            const selectedAnswer = selectedAnswers[questionId];
+
+            if (selectedAnswer) {
+                // Get all options for this question
+                const options = document.querySelectorAll(`#${questionId} .option`);
+
+                options.forEach(option => {
+                    const label = option.querySelector('label');
+
+                    if (label.textContent === correctAnswer) {
+                        label.classList.add('correct'); // Mark correct answer green
+                    }
+
+                    if (label.textContent === selectedAnswer && selectedAnswer !== correctAnswer) {
+                        label.classList.add('wrong'); // Mark wrong answer red
+                    }
+                });
+
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+        });
+
+        // Show result for 2 seconds before redirecting
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            if (percentage >= 80) {
+                window.location.href = 'success.html'; // ✅ Redirect to success page
+            } else {
+                window.location.href = 'failure.html'; // ❌ Redirect to failure page
+            }
+        }, 2000); // Show feedback for 2 seconds before redirecting
+    }
+</script>
+
+</body>
+</html>

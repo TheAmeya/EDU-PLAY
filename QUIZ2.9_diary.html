@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grammar Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        input[type="checkbox"]:checked + label {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Grammar Quiz</h2>
+
+    <div id="questions"></div>
+
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    const questions = [
+        { id: "q1", text: "Which word is a synonym for 'difficult'?", options: ["Easy", "Hard", "Simple", "Soft"], answer: "Hard" },
+        { id: "q2", text: "Choose the antonym of 'generous'.", options: ["Selfish", "Kind", "Helpful", "Brave"], answer: "Selfish" },
+        { id: "q3", text: "What does the word 'mysterious' mean?", options: ["Easy to understand", "Difficult to explain", "Funny and joyful", "Boring and dull"], answer: "Difficult to explain" },
+        { id: "q4", text: "Which word is spelled correctly?", options: ["Suprise", "Surprise", "Surprize", "Suprize"], answer: "Surprise" },
+        { id: "q5", text: "Which word fits best? 'She was ___ when she lost her phone.'", options: ["Happy", "Excited", "Worried", "Cheerful"], answer: "Worried" },
+        { id: "q6", text: "What does the idiom 'a piece of cake' mean?", options: ["Something easy to do", "Something difficult to achieve", "Something delicious", "Something expensive"], answer: "Something easy to do" },
+        { id: "q7", text: "Which word means 'a person who studies the stars and planets'?", options: ["Astronomer", "Artist", "Archaeologist", "Chemist"], answer: "Astronomer" },
+        { id: "q8", text: "Which word means 'the opposite of victory'?", options: ["Success", "Loss", "Achievement", "Trophy"], answer: "Loss" },
+        { id: "q9", text: "What does 'hit the books' mean?", options: ["To read and study","To physically hit books","To browse books"], answer: "To read and study" },
+        { id: "q10", text: "What is the word for the day after today?", options: ["Tomorrow", "Yesterday", "Tonight", "Afternoon"], answer: "Tomorrow" }
+    ];
+
+    let selectedAnswers = {};
+
+    function generateQuestions() {
+        const container = document.getElementById("questions");
+        questions.forEach(q => {
+            let questionHTML = `<div class='question' id='${q.id}'>
+                <p>${q.text}</p>`;
+
+            q.options.forEach(option => {
+                questionHTML += `
+                    <div class='option'>
+                        <input type='checkbox' name='${q.id}' value='${option}' onclick='handleSelection("${q.id}", this)'>
+                        <label>${option}</label>
+                    </div>`;
+            });
+
+            questionHTML += `</div>`;
+            container.innerHTML += questionHTML;
+        });
+    }
+
+    function handleSelection(questionId, selectedOption) {
+        document.querySelectorAll(`input[name='${questionId}']`).forEach(option => {
+            if (option !== selectedOption) {
+                option.checked = false;
+            }
+        });
+        selectedAnswers[questionId] = selectedOption.value;
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        let totalQuestions = questions.length;
+
+        document.querySelectorAll('.correct, .wrong').forEach(label => {
+            label.classList.remove('correct', 'wrong');
+        });
+
+        questions.forEach(q => {
+            const selectedAnswer = selectedAnswers[q.id];
+            const options = document.querySelectorAll(`#${q.id} .option`);
+            options.forEach(option => {
+                const label = option.querySelector('label');
+                if (label.textContent === q.answer) {
+                    label.classList.add('correct');
+                }
+                if (selectedAnswer && selectedAnswer !== q.answer && label.textContent === selectedAnswer) {
+                    label.classList.add('wrong');
+                }
+            });
+            if (selectedAnswer === q.answer) {
+                score++;
+            }
+        });
+
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            window.location.href = percentage >= 80 ? 'diary_2.5.html' : 'failure.html';
+        }, 3000);
+    }
+
+    generateQuestions();
+</script>
+
+</body>
+</html>

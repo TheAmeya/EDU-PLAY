@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Example</title>
+    <style>
+        body {
+            font-family: 'Sans-serif', monospace;
+            margin: 0;
+            padding: 0;
+            background-color: #edebb3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .quiz-container {
+            width: 80%;
+            background-color: #fffaf0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border: 2px solid #868de7;
+            overflow-y: scroll;
+            height: 80vh;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .quiz-container::-webkit-scrollbar {
+            display: none;
+        }
+        h2 {
+            color: #8b6f47;
+            text-align: center;
+        }
+        .question {
+            margin-bottom: 15px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #ddd;
+            margin-top: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: font-size 0.2s ease;
+            font-size: 16px;
+        }
+        input[type="radio"] {
+            margin-right: 10px;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .wrong {
+            color: red;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Take a Quick Quiz!</h2>
+
+    <!-- Question Template -->
+    <script>
+        const questions = [
+            { id: "q11", text: "Which word means 'to look at something quickly'?", options: ["Stare", "Glance", "Observe", "Ignore"], answer: "Glance" },
+            { id: "q12", text: "What does the idiom 'barking up the wrong tree' mean?", options: ["Asking the wrong person", "Playing with a dog", "Complaining loudly", "Running in circles"], answer: "Asking the wrong person" },
+            { id: "q13", text: "Which of these is a synonym for 'fast'?", options: ["Rapid", "Slow", "Sluggish", "Weak"], answer: "Rapid" },
+            { id: "q14", text: "Which word is the correct spelling?", options: ["Separate", "Seperate", "Seperete", "Seperat"], answer: "Separate" },
+            { id: "q15", text: "What does the word 'compassionate' mean?", options: ["Caring and kind", "Angry and rude", "Honest and fair", "Boring and dull"], answer: "Caring and kind" },
+            { id: "q16", text: "Which word means 'very large'?", options: ["Tiny", "Massive", "Little", "Small"], answer: "Massive" },
+            { id: "q17", text: "Which word means 'the opposite of victory'?", options: ["Loss", "Triumph", "Achievement", "Success"], answer: "Loss" },
+            { id: "q18", text: "What does 'once in a blue moon' mean?", options: ["Happening rarely", "Happening every day", "Happening at night", "Happening frequently"], answer: "Happening rarely" },
+            { id: "q19", text: "Which word is spelled correctly?", options: ["Nesesary", "Necessary", "Neccesary", "Necessery"], answer: "Necessary" },
+            { id: "q20", text: "Which word means 'to leave out'?", options: ["Exclude", "Include", "Attach", "Expand"], answer: "Exclude" }
+        ];
+
+        function generateQuestions() {
+            const quizContainer = document.querySelector('.quiz-container');
+            const submitBtn = document.querySelector('.submit-btn');
+
+            questions.forEach((question) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.id = question.id;
+
+                let optionsHTML = "";
+                question.options.forEach((option, index) => {
+                    const optionId = `${question.id}_${index}`;
+                    optionsHTML += `
+                        <div class="option">
+                            <input type="radio" id="${optionId}" name="${question.id}" value="${option}" onclick="handleSelection('${question.id}', this)">
+                            <label for="${optionId}">${option}</label>
+                        </div>
+                    `;
+                });
+
+                questionDiv.innerHTML = `<p>${question.text}</p>${optionsHTML}`;
+                quizContainer.insertBefore(questionDiv, submitBtn);
+            });
+        }
+
+        window.onload = generateQuestions;
+    </script>
+
+    <button class="submit-btn" onclick="submitQuiz()">Submit</button>
+</div>
+
+<script>
+    let selectedAnswers = {};
+
+    function handleSelection(questionId, selectedOption) {
+        selectedAnswers[questionId] = selectedOption.value;
+    }
+
+    function submitQuiz() {
+        let score = 0;
+        let totalQuestions = questions.length;
+
+        // Reset previous feedback
+        document.querySelectorAll('.correct, .wrong').forEach(label => {
+            label.classList.remove('correct', 'wrong');
+        });
+
+        // Check answers and give feedback
+        questions.forEach((question) => {
+            const correctAnswer = question.answer;
+            const selectedAnswer = selectedAnswers[question.id];
+
+            if (selectedAnswer) {
+                const options = document.querySelectorAll(`#${question.id} .option`);
+                options.forEach(option => {
+                    const label = option.querySelector('label');
+                    if (label.textContent === correctAnswer) {
+                        label.classList.add('correct');
+                    }
+                    if (label.textContent === selectedAnswer && selectedAnswer !== correctAnswer) {
+                        label.classList.add('wrong');
+                    }
+                });
+
+                if (selectedAnswer === correctAnswer) {
+                    score++;
+                }
+            }
+        });
+
+        // Show result for 2 seconds before redirecting
+        setTimeout(() => {
+            const percentage = (score / totalQuestions) * 100;
+            if (percentage >= 80) {
+                window.location.href = 'diary_1.4.html'; // ✅ Success page
+            } else {
+                window.location.href = 'failure.html'; // ❌ Failure page
+            }
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>

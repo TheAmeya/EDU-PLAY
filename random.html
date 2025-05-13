@@ -1,0 +1,17 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>redirect</title>
+    <script>
+        function rp() {
+            const pages = ['xyz.html']
+            const randomIndex = Math.floor(Math.random() * pages.length);
+            window.location.href = pages[randomIndex];
+        }
+    </script>
+</head>
+<body>
+    <button onclick="rp()">Go to detective journal</button>
+</body>
+</html>

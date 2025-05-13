@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wordle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fafafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(5, 50px);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background-color: white;
+        }
+        .correct {
+            background-color: #6aaa64;
+            color: white;
+        }
+        .present {
+            background-color: #c9b458;
+            color: white;
+        }
+        .absent {
+            background-color: #787c7e;
+            color: white;
+        }
+        .input-area {
+            margin-bottom: 20px;
+        }
+        input {
+            width: 200px;
+            padding: 10px;
+            font-size: 18px;
+            text-transform: uppercase;
+            margin-right: 10px;
+        }
+        button {
+            padding: 10px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Wordle Game</h2>
+    <div class="board" id="board"></div>
+    <div class="input-area">
+        <input type="text" id="guess-input" maxlength="5" />
+        <button onclick="checkGuess()">Submit</button>
+    </div>
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+    const words = ["APPLE", "HOUSE", "PLANT", "BRAIN", "WORLD", "LEMON", "CRANE", "TIGER", "ZEBRA", "MANGO","GAMER","HELLO","GRAPE", "STONE", "LIGHT", "CLOUD", "RIVER", "SMILE", "PLUMB", "BRICK", "GHOST", "FLAME", "SHINE", "TRUCK", "WATER", "FROST", "HAPPY", "JOLLY", "FIGHT", "GLASS", "TOWER", "DREAM","CHESS", "TABLE", "BRUSH", "SHIRT", "CANDY", "GRASS", "FLUTE", "BRAVE", "CRISP", "DANCE", "EAGER", "FRESH", "GLOBE", "HONEY", "JOLLY", "KNEEL", "LATCH", "MERRY", "NOBLE", "OCEAN", "PEACH", "QUICK", "RAISE", "SLEEP", "TIGER", "URBAN", "VIVID", "WISER", "YOUTH", "ZEBRA","ADORE", "BEACH", "CHALK", "DIZZY", "EPOCH", "FAITH", "GLORY", "HUMOR", "IVORY", "JUDGE", "KOALA", "LUSHY", "MIRTH", "NACHO", "OPERA", "PRISM", "QUIRK", "RANCH", "SALTY", "TANGO", "UNITE", "VIXEN", "WALTZ", "XYLEM", "YEARN", "ZESTY","ANGEL", "BREAD", "CROWN", "DREAM", "ELDER", "FROST", "GRACE", "HAPPY", "IRONY", "JOLLY", "KITES", "LOVER", "MANGO", "NIGHT", "OASIS", "PEARL", "QUOTA", "RIVER", "SPARK", "TRUTH", "UMBRA", "VOWEL", "WORTH", "XENON", "YEAST", "ZEBRA","ALMON", "BLAST", "CRISP", "DROVE", "EVENT", "FLOCK", "GRIND", "HUMID", "IVORY", "JOLTS", "KNEAD", "LEAPT", "MOTEL", "NAVEL", "ORBIT", "PLUSH", "QUART", "RUSTY", "SCOUT", "THUMP", "URBAN", "VEXED", "WISPY", "XENIA", "YACHT", "ZONED","BLAME","AMPLE","ABIDE", "BLOOM", "CHARM", "DEPTH", "EXACT", "FLUID", "GRASP", "HOVER", "IDEAL", "JOKER", "KNIFE", "LUNAR", "MAGIC", "NORTH", "OZONE", "PLANT", "QUIRK", "ROAST", "SHINE", "TIGER", "UPLIT", "VOTER", "WINDY", "XEROX", "YEARN", "ZESTY", "ALPHA", "BISON", "CHIRP", "DRIFT", "EAGER", "FROST", "GLASS", "HAVEN", "INLET", "JOLLY", "KIOSK", "LEVEL", "MIRTH", "NIMRO", "OCEAN", "PULSE", "QUOTA", "RANCH", "SMILE", "TOKEN", "UMBRA", "VIXEN", "WALTZ", "XYLEM", "YOUTH", "ZEBRA","BANJO", "CANOE", "DEBIT", "EXCEL", "FIBER", "GLYPH", "HYDRO", "INDEX", "JUMPS", "KARMA", "LIMBO", "MUSIC", "NYLON", "OPIUM", "PIZZA", "QUILL", "RADIO", "SUSHI", "THICK", "USAGE", "VAPOR", "YOLKS", "ZIPPY","ABYSS", "BLAZE", "CHIRP", "DRONE", "EMBER", "FLARE", "GUILD", "HAVOC", "INFER", "JOLTS", "KIOSK", "LATCH", "MOTIF", "NEXUS", "OPTIC", "PIXEL", "QUIRK", "RELIC", "SWIRL", "THUMP", "UNZIP", "VORTX", "WREAK", "XENON", "YACHT", "ZONAL","ACUTE", "BLEND", "CRUSH", "DIVINE", "ELFIN", "FRISK", "GLINT", "HEIST", "IMPEL", "JOVIAL", "KAPPA", "LUSHY", "MIRTH", "NOBLE", "OZONE", "PLUMB", "QUAKE", "RAVEL", "STOMP", "TWIRL", "UNFED", "VOGUE", "WHELP", "XENIA", "YODEL", "ZAPPY","ARISE", "BRAWN", "CHASM", "DAISY", "ECLIP", "FLINT", "GRAVY", "HOVER", "INFIX", "JOKER", "KNEAD", "LEAFY", "MOGUL", "NIFTY", "ORBIT", "PLUSH", "QUOTA", "REACT", "SALVO", "TWEAK", "UPPER", "VIGOR", "WISPY", "XEROS", "YUMMY", "ZONED"];
+    const answer = words[Math.floor(Math.random() * words.length)];
+    let currentRow = 0;
+    let maxAttempts = 7;
+
+    function createBoard() {
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        for (let i = 0; i < maxAttempts; i++) {
+            for (let j = 0; j < 5; j++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.setAttribute('data-row', i);
+                cell.setAttribute('data-col', j);
+                board.appendChild(cell);
+            }
+        }
+    }
+
+    function checkGuess() {
+        const input = document.getElementById('guess-input');
+        const guess = input.value.toUpperCase();
+
+        if (guess.length !== 5) {
+            displayMessage("Word must be 5 letters.");
+            return;
+        }
+
+        if (!words.includes(guess)) {
+            displayMessage("Word not in list.");
+            return;
+        }
+
+        const rowCells = document.querySelectorAll(`.cell[data-row="${currentRow}"]`);
+
+        for (let i = 0; i < 5; i++) {
+            rowCells[i].textContent = guess[i];
+            if (guess[i] === answer[i]) {
+                rowCells[i].classList.add('correct'); // Correct letter in correct position
+            } else if (answer.includes(guess[i])) {
+                rowCells[i].classList.add('present'); // Correct letter in wrong position
+            } else {
+                rowCells[i].classList.add('absent'); // Incorrect letter
+            }
+        }
+
+        if (guess === answer) {
+            displayMessage(`🎉 Correct! The word was "${answer}"`);
+            disableInput();
+            return;
+        }
+
+        currentRow++;
+
+        if (currentRow >= maxAttempts) {
+            displayMessage(`❌ Game over! The word was "${answer}"`);
+            disableInput();
+        }
+
+        input.value = '';
+    }
+
+    function displayMessage(msg) {
+        document.getElementById('message').textContent = msg;
+    }
+
+    function disableInput() {
+        document.getElementById('guess-input').disabled = true;
+    }
+
+    createBoard();
+</script>
+
+</body>
+</html>
